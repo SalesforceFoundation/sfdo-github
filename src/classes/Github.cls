@@ -122,7 +122,7 @@ global with sharing class Github {
         global String body_raw { get; set; }
         global String body_html { get; set; }
         global String body_text { get; set; }
-        global Integer comments { get; set; }
+        global List<Github.Comment> comments { get; set; }
         global Datetime closed_at { get; set; }
         global Datetime created_at { get; set; }
         global Datetime updated_at { get; set; }
@@ -165,6 +165,16 @@ global with sharing class Github {
         }
     }
 
+    global class Comment {
+        global Integer id { get; set; }
+        global String url { get; set; }
+        global String html_url { get; set; }
+        global String body { get; set; }
+        global Github.User user { get; set; }
+        global Datetime created_at { get; set; }
+        global Datetime updated_at { get; set; }
+    }
+
     global class Repository {
         global Integer id { get; set; }
         global String name { get; set; }
@@ -174,6 +184,18 @@ global with sharing class Github {
         global Boolean fork { get; set; }
     }
 
+    global class IssueEvent {
+        global String action { get; set; }
+        global Github.Issue issue { get; set; }
+        global Github.Repository repository { get; set; }
+    }
+
+    global class IssueCommentEvent {
+        global String action { get; set; }
+        global Github.Issue issue { get; set; }
+        global Github.Comment comment { get; set; } 
+    }
+
     global class Hook {
         global String url { get; set; }
         global String name { get; set; }
@@ -181,12 +203,6 @@ global with sharing class Github {
         global Boolean active { get; set; }
         global Map<String, String> config { get; set; }
         global Integer id { get; set; }
-    }
-
-    global class Webhook {
-        global String action { get; set; }
-        global Github.Issue issue { get; set; }
-        global Github.Repository repository { get; set; }
     }
 
     /**
