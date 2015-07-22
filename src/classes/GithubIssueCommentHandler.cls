@@ -5,16 +5,15 @@ global class GithubIssueCommentHandler {
         return true;
     }
 
-    private static Boolean isAuthorizedUser(String githubUserId) {
-        // TODO: check this against user field
-        return true;
-    }
-
     global class ResponseWrapper {
-        global Id workId { get; set; }
+        global Id recordId { get; set; }
 
-        global ResponseWrapper(String projectId) {
-            this.workId = workId;
+        global ResponseWrapper(String recordId) {
+            this.recordId = (Id)recordId;
+        }
+
+        global ResponseWrapper(Id recordId) {
+            this.recordId = recordId;
         }
     }
     
@@ -25,32 +24,55 @@ global class GithubIssueCommentHandler {
         Github.IssueCommentEvent issueCommentEvent = (Github.IssueCommentEvent) JSON.deserialize(body, Github.IssueCommentEvent.class);
         Id recordId;   
 
-        if (!isAuthorizedUser(null)) {
+        if (!GithubToAgileAccelerator.isAuthorizedUser(issueCommentEvent.comment.user.login)) {
+            // TODO: log an error if the user isn't authorized
             return null;
         }
 
         if (issueCommentEvent.comment.body.contains('**lurch:')) {
+            CommentAction action = parseAction(IssueCommentEvent.comment.body);
 
-            String action = 'TODO'; // replace with regex to parse out action
-            String target = 'TODO'; // replace with regex for epic or work
-            if (action == 'add') { 
+            if (action.type == 'add') { 
                 // **lurch:add
+                issueCommentEvent.comment.body = action.body;
                 recordId = GithubToAgileAccelerator.addWorkRecord(issueCommentEvent);
-            } else if (action == 'attach') { 
-                if (target.containsIgnoreCase('w-')) { 
+            } else if (action.type == 'attach') { 
+                if (action.recordName.containsIgnoreCase('w-')) { 
                     // **lurch:attach W-xx01010010xx
-                    recordId = GithubToAgileAccelerator.attachToWorkRecord(issueCommentEvent, target);    
+                    recordId = GithubToAgileAccelerator.attachToWorkRecord(issueCommentEvent, action.recordName);    
                 } else {
+                    // TODO
                     // **lurch:attach epic:asdflkjsadlkfj
-                    recordId = GithubToAgileAccelerator.attachToEpicRecord(issueCommentEvent, target);    
+                    recordId = GithubToAgileAccelerator.attachToEpicRecord(issueCommentEvent, action.recordName);    
                 }                
-            } else if (action == 'remove') {
+            } else if (action.type == 'remove') {
                 // **lurch:remove
                 recordId = GithubToAgileAccelerator.detachFromAllRecords(issueCommentEvent);
             }
         }
 
         return new ResponseWrapper(recordId);
+    }
+
+    global class CommentAction {
+        global String type;
+        global String recordName;
+        global String body;
+    }
+
+    @TestVisible
+    private static CommentAction parseAction(String commentBody) {
+        Pattern p = Pattern.compile('\\*\\*lurch:((?i)[a-z]+)( (?i)w-[0-9]+)?');
+        Matcher pm = p.matcher( commentBody );
+        pm.find();
+        CommentAction action = new CommentAction();
+        action.type = pm.group(1);
+        if (pm.group(2) != null) {
+            action.recordName = pm.group(2).trim();    
+        }
+        action.body = pm.replaceAll('').trim();
+
+        return action;
     }
 
 }

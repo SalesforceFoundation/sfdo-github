@@ -109,6 +109,7 @@ global with sharing class Github {
     }
 
     global class Issue {
+        global String id { get; set; }
         global String url { get; set; }
         global String html_url { get; set; }
 
@@ -122,7 +123,7 @@ global with sharing class Github {
         global String body_raw { get; set; }
         global String body_html { get; set; }
         global String body_text { get; set; }
-        global List<Github.Comment> comments { get; set; }
+        global Integer comments { get; set; }
         global Datetime closed_at { get; set; }
         global Datetime created_at { get; set; }
         global Datetime updated_at { get; set; }
@@ -194,6 +195,7 @@ global with sharing class Github {
         global String action { get; set; }
         global Github.Issue issue { get; set; }
         global Github.Comment comment { get; set; } 
+        global Github.Repository repository { get; set; } 
     }
 
     global class Hook {
