@@ -1,19 +1,15 @@
-@RestResource(urlMapping='/github/issueCommentEvent')
-global class GithubIssueCommentHandler {
+@RestResource(urlMapping='/github/issueComment')
+global without sharing class GithubIssueCommentHandler {
 
-    private Boolean checkSecret(String body) {
-        return true;
-    }
+    //private Boolean checkSecret(String body) {
+    //    return true;
+    //}
 
     global class ResponseWrapper {
-        global Id recordId { get; set; }
+        global String message { get; set; }
 
-        global ResponseWrapper(String recordId) {
-            this.recordId = (Id)recordId;
-        }
-
-        global ResponseWrapper(Id recordId) {
-            this.recordId = recordId;
+        global ResponseWrapper(String message) {
+            this.message = message;
         }
     }
     
@@ -21,58 +17,40 @@ global class GithubIssueCommentHandler {
     global static ResponseWrapper receiveEvent() {
         RestRequest req = RestContext.request;
         String body = req.requestBody.toString();
-        Github.IssueCommentEvent issueCommentEvent = (Github.IssueCommentEvent) JSON.deserialize(body, Github.IssueCommentEvent.class);
-        Id recordId;   
+        Github.IssueCommentEvent evt = (Github.IssueCommentEvent) JSON.deserialize(body, Github.IssueCommentEvent.class);
+        
+        ResponseWrapper resp;
 
-        if (!GithubToAgileAccelerator.isAuthorizedUser(issueCommentEvent.comment.user.login)) {
-            // TODO: log an error if the user isn't authorized
-            return null;
-        }
-
-        if (issueCommentEvent.comment.body.contains('**lurch:')) {
-            CommentAction action = parseAction(IssueCommentEvent.comment.body);
-
-            if (action.type == 'add') { 
-                // **lurch:add
-                issueCommentEvent.comment.body = action.body;
-                recordId = GithubToAgileAccelerator.addWorkRecord(issueCommentEvent);
-            } else if (action.type == 'attach') { 
-                if (action.recordName.containsIgnoreCase('w-')) { 
-                    // **lurch:attach W-xx01010010xx
-                    recordId = GithubToAgileAccelerator.attachToWorkRecord(issueCommentEvent, action.recordName);    
-                } else {
-                    // TODO
-                    // **lurch:attach epic:asdflkjsadlkfj
-                    recordId = GithubToAgileAccelerator.attachToEpicRecord(issueCommentEvent, action.recordName);    
-                }                
-            } else if (action.type == 'remove') {
-                // **lurch:remove
-                recordId = GithubToAgileAccelerator.detachFromAllRecords(issueCommentEvent);
+        if (evt.comment.body.contains('lurch:')) {
+            GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction(evt.comment.body);
+            if (action.type == 'add' || action.type == 'remove' || action.type == 'attach') { 
+                Github_Request__c gitRequest = new Github_Request__c(
+                    Action__c = action.type,
+                    Title__c = evt.issue.title,
+                    Body__c = evt.issue.body,
+                    Comment__c = evt.comment.body,
+                    Status__c = 'New',
+                    Target__c = action.target,
+                    Github_Event__c = 'Issue Comment ' + evt.action,
+                    Github_Record_Id__c = evt.issue.id,
+                    Github_Record_Type__c = 'Issue',
+                    Github_Record_URL__c = evt.issue.url,
+                    Github_Repository__c = evt.repository.name,
+                    Github_Username__c = evt.comment.user.login,
+                    JSON__c = body
+                );
+                insert gitRequest;
+                resp = new ResponseWrapper('Request received.');
+            } else {
+                resp = new ResponseWrapper('Unable to process request.');
             }
+        } else {
+            resp = new ResponseWrapper('No command received.');
         }
 
-        return new ResponseWrapper(recordId);
+        return resp;
     }
 
-    global class CommentAction {
-        global String type;
-        global String recordName;
-        global String body;
-    }
 
-    @TestVisible
-    private static CommentAction parseAction(String commentBody) {
-        Pattern p = Pattern.compile('\\*\\*lurch:((?i)[a-z]+)( (?i)w-[0-9]+)?');
-        Matcher pm = p.matcher( commentBody );
-        pm.find();
-        CommentAction action = new CommentAction();
-        action.type = pm.group(1);
-        if (pm.group(2) != null) {
-            action.recordName = pm.group(2).trim();    
-        }
-        action.body = pm.replaceAll('').trim();
-
-        return action;
-    }
 
 }
