@@ -70,35 +70,38 @@ global without sharing class GithubToAgileAccelerator {
         return request.Github_Repository__c + '_' + request.Github_Record_Type__c + '_' + request.Github_Record_Id__c; 
     }
 
-    public static List<GitHub_Link__c> addWorkRecords(List<Github_Request__c> gitRequests) {
-        Map<Github_Request__c, agf__ADM_Work__c> workToCreate = new Map<Github_Request__c, agf__ADM_Work__c>();
+    public static List<Github_Request__c> addWorkRecords(List<Github_Request__c> gitRequests) {
+        // github unique Id => work
+        Map<String, agf__ADM_Work__c> workToCreate = new Map<String, agf__ADM_Work__c>();
+        // github unique Id => request
+        Map<String, Github_Request__c> requests = new Map<String, Github_Request__c>();
         List<GitHub_Link__c> linksToCreate = new List<GitHub_Link__c>();
 
         for (Github_Request__c gitRequest : gitRequests) {
             // create the work record
-            workToCreate.put( gitRequest, new agf__ADM_Work__c (
+            workToCreate.put( gitRequest.Github_Unique_Id__c, new agf__ADM_Work__c (
                 agf__Details__c = gitRequest.Body__c,
                 agf__Perforce_Status__c = 'Attached',
                 agf__Product_Tag__c = repositoryMap.get(gitRequest.Github_Repository__c).Product_Tag__c,
                 agf__Status__c = 'New - From Github',
                 agf__Subject__c = gitRequest.Title__c
             ));
-            gitRequest.Status__c = 'Processed';
+            requests.put(gitRequest.Github_Unique_Id__c, gitRequest);
         }
         // insert work
         if (!workToCreate.values().isEmpty()) {
             insert workToCreate.values();
         }
 
-        for (Github_Request__c gitRequest : workToCreate.keySet()) {
+        for (String uniqueId : workToCreate.keySet()) {
             // create link to work
             linksToCreate.add( new GitHub_Link__c(
-                GitHub_Id__c = gitRequest.Github_Record_Id__c, 
-                GitHub_Type__c = gitRequest.Github_Record_Type__c,
-                Github_URL__c = gitRequest.Github_Record_URL__c,
-                Work__c = workToCreate.get(gitRequest).Id
+                GitHub_Unique_Id__c = requests.get(uniqueId).Github_Unique_Id__c, 
+                GitHub_Type__c = requests.get(uniqueId).Github_Record_Type__c,
+                Github_URL__c = requests.get(uniqueId).Github_Record_URL__c,
+                Work__c = workToCreate.get(uniqueId).Id
             ));
-            gitRequest.Status__c = 'Processed';
+            requests.get(uniqueId).Status__c = 'Processed';
         }
 
         // insert links
@@ -107,58 +110,93 @@ global without sharing class GithubToAgileAccelerator {
         }
 
         // update requests with new status
+        update requests.values();
+
+        return requests.values();
+    }
+
+    public static List<Github_Request__c> attachWorkToRecords(List<Github_Request__c> gitRequests) {
+        List<GitHub_Link__c> linksToCreate = new List<GitHub_Link__c>();
+
+        Map<String, Id> workNameWithId = new Map<String, Id>();
+        Map<String, Github_Request__c> requestMap = new Map<String, Github_Request__c>();
+        Map<String, GitHub_Link__c> linkMap = new Map<String, GitHub_Link__c>();
+
+        for (Github_Request__c gitRequest : gitRequests) {
+            if (gitRequest.Target__c != null) {
+                requestMap.put(gitRequest.Github_Unique_Id__c, gitRequest);
+                workNameWithId.put(gitRequest.Target__c, null);    
+            } else {
+                gitRequest.Status__c = 'Rejected';
+            }
+        }   
+
+        //// try to find a work record with the matching name
+        for (agf__ADM_Work__c work : [ SELECT Id, Name 
+                                        FROM agf__ADM_Work__c 
+                                        WHERE Name in :workNameWithId.keySet()]) {
+            workNameWithId.put(work.Name, work.Id);
+        }
+
+        // look for links with matching links and work name
+        for (GitHub_Link__c link : [ SELECT Id, Work__r.Name, Github_Unique_Id__c 
+                                        FROM GitHub_Link__c
+                                        WHERE Github_Unique_Id__c in :requestMap.keySet() ]) {
+            linkMap.put(link.Github_Unique_Id__c, link);
+        }
+        
+        for (Github_Request__c gitRequest : gitRequests) {
+            if (linkMap.get(gitRequest.Github_Unique_Id__c) != null && requestMap.get(gitRequest.Github_Unique_Id__c).Target__c == linkMap.get(gitRequest.Github_Unique_Id__c).Work__r.Name) {
+                // link already exists
+                gitRequest.Status__c = 'Rejected';
+            } else if (workNameWithId.get(gitRequest.Target__c) != null) {
+                // work exists but link does not - create it
+                linksToCreate.add( new GitHub_Link__c(
+                    GitHub_Unique_Id__c = gitRequest.Github_Unique_Id__c,
+                    GitHub_Type__c = gitRequest.Github_Record_Type__c,
+                    Github_URL__c = gitRequest.Github_Record_URL__c,
+                    Work__c = workNameWithId.get(gitRequest.Target__c)
+                ));
+                gitRequest.Status__c = 'Processed';
+            } else {
+                // work not found
+                gitRequest.Status__c = 'Rejected';
+            }
+        }
+
+        if (!linksToCreate.isEmpty()) {
+            insert linksToCreate;
+        }
+
         update gitRequests;
 
-        return linksToCreate;
+        return gitRequests;
     }
+
+    public static List<Github_Request__c> detachFromAllRecords(List<Github_Request__c> gitRequests){
+        Set<String> githubUniqueIds = new Set<String>();
+        for (Github_Request__c gitRequest : gitRequests) {
+            githubUniqueIds.add(gitRequest.Github_Unique_Id__c);
+            gitRequest.Status__c = 'Processed';
+        }
+
+        List<GitHub_Link__c> linksToDelete = 
+            [ SELECT Id FROM GitHub_Link__c WHERE Github_Unique_Id__c in :githubUniqueIds ];
+        if (!linksToDelete.isEmpty()) {
+            delete linksToDelete;
+        }
+
+        update gitRequests;
+
+        return gitRequests;
+    }
+
 /*
-    public static List<GitHub_Link__c> attachWorkToRecords(List<Github_Request__c> gitRequests) {
-
-    }
-
-/*
-    global static Id attachToWorkRecord(Github.Issue issue, String workName){
-        // try to find a work record with the matching name
-        List<agf__ADM_Work__c> matchingWork = [ SELECT Id FROM agf__ADM_Work__c WHERE Name = :workName];
-        if (matchingWork.size() > 0) {
-            // if there's a match, make sure there's no existing github link
-            List<GitHub_Link__c> matchingLinks = [ SELECT Id, GitHub_Id__c, Work__c, Work__r.Name 
-                FROM GitHub_Link__c 
-                WHERE Work__r.Name = :workName 
-                AND GitHub_Id__c = :issue.id ];
-            if (matchingLinks.size() > 0) {
-                return matchingLinks[0].Work__c;
-            } else {
-                // if the work matches but there's no link yet, create one
-                GitHub_Link__c link = new GitHub_Link__c(
-                    GitHub_Id__c = issue.id, 
-                    GitHub_Type__c = 'Issue',
-                    Work__c = matchingWork[0].Id
-                );
-                insert link;
-                return matchingWork[0].Id;
-            }
-
-        } else {
-            // if there's no matching work record, return null
-            return null;    
-        }        
-    }
 
     global static Id attachToEpicRecord(Github.Issue issue, String epicName){
         // TODO: implement
         return null;
     }
-
-    global static Boolean detachFromAllRecords(Github.Issue issue){
-        Boolean isDeleted = false;
-        List<GitHub_Link__c> linksToDelete = 
-            [ SELECT Id FROM GitHub_Link__c WHERE GitHub_Id__c = :issue.id ];
-        if (!linksToDelete.isEmpty()) {
-            delete linksToDelete;
-            isDeleted = true;
-        }
-        return isDeleted;
-    }*/
+*/
     
 }

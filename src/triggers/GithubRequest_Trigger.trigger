@@ -35,15 +35,15 @@ trigger GithubRequest_Trigger on Github_Request__c (before insert, after insert)
 
             Set<String> links = new Set<String>();
 
-            for (Github_Link__c link : [ SELECT Id, GitHub_Type__c, GitHub_Id__c 
+            for (Github_Link__c link : [ SELECT Id, GitHub_Type__c, GitHub_Unique_Id__c 
                                             FROM Github_Link__c 
-                                            WHERE GitHub_Id__c in :requestsToCheck.keySet() ]) {
-                links.add(link.GitHub_Id__c);
+                                            WHERE GitHub_Unique_Id__c in :requestsToCheck.keySet() ]) {
+                links.add(link.GitHub_Unique_Id__c);
             }
 
             // reject requests with no commands if they're from untracked records   
             for (Github_Request__c requestToCheck : requestsToCheck.values()) {
-                if (!links.contains(requestToCheck.GitHub_Record_Id__c)) {
+                if (!links.contains(requestToCheck.GitHub_Unique_Id__c)) {
                     requestToCheck.Status__c = 'Rejected';
                 } else {
                     processRequests = true;
@@ -65,7 +65,7 @@ trigger GithubRequest_Trigger on Github_Request__c (before insert, after insert)
             String chronExpression = now.secondGmt() + ' ' + now.minuteGmt() + ' ' + now.hourGmt() + ' ' + now.dayGmt() + ' ' + now.monthGmt() + ' ?';
             System.debug(chronExpression);
             String jobID = system.schedule('Process GitHub Requests', chronExpression, handler);
-            */
+            */    
         }
         
     } 
