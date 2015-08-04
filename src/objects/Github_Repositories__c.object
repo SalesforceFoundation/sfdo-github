@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>List</customSettingsType>
+    <customSettingsVisibility>Protected</customSettingsVisibility>
+    <description>Mapping of Github repositories to product tags in Agile Accelerator</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>Github_Repository_Id__c</fullName>
+        <description>repository.id</description>
+        <externalId>false</externalId>
+        <label>Github Repository Id</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Product_Tag__c</fullName>
+        <description>The Id of the corresponding Product Tag in Agile Accelerator.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The Id of the corresponding Product Tag in Agile Accelerator.</inlineHelpText>
+        <label>Product Tag</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Github Repositories</label>
+</CustomObject>
