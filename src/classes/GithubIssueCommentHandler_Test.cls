@@ -1,24 +1,24 @@
 @isTest
 private class GithubIssueCommentHandler_Test {
-	
-	@isTest static void testParseAdd() {
-		GithubIssueCommentHandler.CommentAction action = GithubIssueCommentHandler.parseAction('**lurch:add Do some stuff');
+    
+    @isTest static void testParseAdd() {
+        GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction('**lurch:add Do some stuff');
         System.assertEquals('add', action.type);
 
-        action = GithubIssueCommentHandler.parseAction('**lurch:ADD Do some stuff');
+        action = GithubToAgileAccelerator.parseAction('**lurch:ADD Do some stuff');
         System.assertEquals('ADD', action.type);
         System.assertEquals('Do some stuff', action.body);
 
-	}
+    }
 
     @isTest static void testParseAttachWork() {
-        GithubIssueCommentHandler.CommentAction action = GithubIssueCommentHandler.parseAction('**lurch:attach W-12345 ');
+        GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction('**lurch:attach W-12345 ');
         System.assertEquals('attach', action.type);
-        System.assertEquals('W-12345', action.recordName);
+        System.assertEquals('W-12345', action.target);
 
-        action = GithubIssueCommentHandler.parseAction('**lurch:attach w-12345 ');
+        action = GithubToAgileAccelerator.parseAction('**lurch:attach w-12345 ');
         System.assertEquals('attach', action.type);
-        System.assertEquals('w-12345', action.recordName);
+        System.assertEquals('w-12345', action.target);
     }
-	
+    
 }
