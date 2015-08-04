@@ -234,20 +234,6 @@
         <unique>false</unique>
     </fields>
     <label>Github Request</label>
-    <listViews>
-        <fullName>All</fullName>
-        <columns>NAME</columns>
-        <columns>Status__c</columns>
-        <columns>Github_Record_Type__c</columns>
-        <columns>Title__c</columns>
-        <columns>Action__c</columns>
-        <columns>Target__c</columns>
-        <columns>Github_Repository__c</columns>
-        <columns>Github_Username__c</columns>
-        <filterScope>Everything</filterScope>
-        <label>All</label>
-        <language>en_US</language>
-    </listViews>
     <nameField>
         <displayFormat>GitReq-{00000000}</displayFormat>
         <label>Github Request Name</label>
