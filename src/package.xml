@@ -16,6 +16,39 @@
   <types>
     <members>GithubRequest_Trigger</members>
     <name>ApexTrigger</name>
-  </types>  
+  </types>
+  <types>
+    <members>GitHub_Link__c</members>
+    <members>Github_Request__c</members>
+    <members>Github_Integration_Users__c</members>
+    <members>Github_Repositories__c</members>
+    <name>CustomObject</name>
+  </types>
+  <types>
+    <members>GitHub_Link__c.GitHub_Type__c</members>
+    <members>GitHub_Link__c.Github_URL__c</members>
+    <members>Github_Request__c.Title__c</members>
+    <members>Github_Request__c.Target__c</members>
+    <members>Github_Request__c.Status__c</members>
+    <members>Github_Request__c.Queue_Datestamp__c</members>
+    <members>Github_Request__c.JSON__c</members>
+    <members>Github_Request__c.Github_Username__c</members>
+    <members>Github_Request__c.Github_Record_URL__c</members>
+    <members>Github_Request__c.Github_Unique_Id__c</members>
+    <members>Github_Request__c.Github_Repository__c</members>
+    <members>Github_Request__c.Github_Record_Type__c</members>
+    <members>Github_Request__c.Github_Record_Id__c</members>
+    <members>Github_Request__c.Github_Event__c</members>
+    <members>Github_Request__c.Comment__c</members>
+    <members>GitHub_Link__c.GitHub_Unique_Id__c</members>
+    <members>GitHub_Link__c.JSON__c</members>
+    <members>GitHub_Link__c.Work__c</members>
+    <members>Github_Integration_Users__c.Github_Username__c</members>
+    <members>Github_Repositories__c.Github_Repository_Id__c</members>
+    <members>Github_Repositories__c.Product_Tag__c</members>
+    <members>Github_Request__c.Action__c</members>
+    <members>Github_Request__c.Body__c</members>`
+    <name>CustomField</name>
+  </types>
   <version>32.0</version>
 </Package>
