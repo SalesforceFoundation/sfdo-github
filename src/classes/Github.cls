@@ -194,8 +194,8 @@ global with sharing class Github {
     global class IssueCommentEvent {
         global String action { get; set; }
         global Github.Issue issue { get; set; }
-        global Github.Comment comment { get; set; } 
-        global Github.Repository repository { get; set; } 
+        global Github.Comment comment { get; set; }
+        global Github.Repository repository { get; set; }
     }
 
     global class Hook {
@@ -620,6 +620,12 @@ global with sharing class Github {
 
         global void remove(Github.Issue issue) {
             this.makeRequest(String.valueOf(issue.num), 'DELETE', null);
+        }
+
+        global Github.Comment createComment(Github.Comment comment) {
+          System.assert(comment.id != null, 'Comment.id is required to post a Comment.');
+          this.makeRequest(String.valueOf(comment.id) + '/comments', 'POST', JSON.serialize(comment));
+          return (Github.Comment) JSON.deserialize(this.lastREsponse.body, Github.Comment.class);
         }
 
         global List<Github.Issue> next() {
