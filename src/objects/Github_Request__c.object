@@ -163,6 +163,16 @@
         <unique>false</unique>
     </fields>
     <fields>
+        <fullName>MD_Work_Link__c</fullName>
+        <externalId>false</externalId>
+        <label>Markdown Work Link</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Github_Username__c</fullName>
         <externalId>false</externalId>
         <label>Github Username</label>
