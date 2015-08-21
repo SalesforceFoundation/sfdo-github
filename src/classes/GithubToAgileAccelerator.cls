@@ -8,6 +8,7 @@ global without sharing class GithubToAgileAccelerator {
     5.  pull requests from a known user
     (?) 5.  milestones
     */
+    static String INSTANCE_URL = 'https://foundation--kbromer.cs30.my.salesforce.com/';
 
     private static Set<String> authorizedUsers {
         get {
@@ -15,7 +16,7 @@ global without sharing class GithubToAgileAccelerator {
                 authorizedUsers = new Set<String>();
                 List<Github_Integration_Users__c> users = Github_Integration_Users__c.getAll().values();
                 for (Github_Integration_Users__c user : users) {
-                    authorizedUsers.add(user.Github_Username__c);   
+                    authorizedUsers.add(user.Github_Username__c);
                 }
             }
             return authorizedUsers;
@@ -59,7 +60,7 @@ global without sharing class GithubToAgileAccelerator {
         Action act = new Action();
         act.type = pm.group(1);
         if (pm.group(2) != null) {
-            act.target = pm.group(2).trim();    
+            act.target = pm.group(2).trim();
         }
         act.body = pm.replaceAll('').trim();
 
@@ -67,7 +68,7 @@ global without sharing class GithubToAgileAccelerator {
     }
 
     public static String getUniqueId(Github_Request__c request) {
-        return request.Github_Repository__c + '_' + request.Github_Record_Type__c + '_' + request.Github_Record_Id__c; 
+        return request.Github_Repository__c + '_' + request.Github_Record_Type__c + '_' + request.Github_Record_Id__c;
     }
 
     public static List<Github_Request__c> addWorkRecords(List<Github_Request__c> gitRequests) {
@@ -91,17 +92,21 @@ global without sharing class GithubToAgileAccelerator {
         // insert work
         if (!workToCreate.values().isEmpty()) {
             insert workToCreate.values();
+            // requery for name/etc. to provide links
+            workToCreate = new Map<String, agf__ADM_Work__c>([select id, Name from agf__ADM_Work__c where id IN :workToCreate.values()]);
         }
 
         for (String uniqueId : workToCreate.keySet()) {
             // create link to work
             linksToCreate.add( new GitHub_Link__c(
-                GitHub_Unique_Id__c = requests.get(uniqueId).Github_Unique_Id__c, 
+                GitHub_Unique_Id__c = requests.get(uniqueId).Github_Unique_Id__c,
                 GitHub_Type__c = requests.get(uniqueId).Github_Record_Type__c,
                 Github_URL__c = requests.get(uniqueId).Github_Record_URL__c,
                 Work__c = workToCreate.get(uniqueId).Id
             ));
             requests.get(uniqueId).Status__c = 'Processed';
+            requests.get(uniqueId).MD_Work_Link__c = '[' + workToCreate.get(uniqueId).Name + ']' + '(' + INSTANCE_URL + workToCreate.get(uniqueId).Id + ')';
+            requests.get(uniqueId).Target__c = workToCreate.get(uniqueId).Name;
         }
 
         // insert links
@@ -125,26 +130,26 @@ global without sharing class GithubToAgileAccelerator {
         for (Github_Request__c gitRequest : gitRequests) {
             if (gitRequest.Target__c != null) {
                 requestMap.put(gitRequest.Github_Unique_Id__c, gitRequest);
-                workNameWithId.put(gitRequest.Target__c, null);    
+                workNameWithId.put(gitRequest.Target__c, null);
             } else {
                 gitRequest.Status__c = 'Rejected';
             }
-        }   
+        }
 
         //// try to find a work record with the matching name
-        for (agf__ADM_Work__c work : [ SELECT Id, Name 
-                                        FROM agf__ADM_Work__c 
+        for (agf__ADM_Work__c work : [ SELECT Id, Name
+                                        FROM agf__ADM_Work__c
                                         WHERE Name in :workNameWithId.keySet()]) {
             workNameWithId.put(work.Name, work.Id);
         }
 
         // look for links with matching links and work name
-        for (GitHub_Link__c link : [ SELECT Id, Work__r.Name, Github_Unique_Id__c 
+        for (GitHub_Link__c link : [ SELECT Id, Work__r.Name, Github_Unique_Id__c
                                         FROM GitHub_Link__c
                                         WHERE Github_Unique_Id__c in :requestMap.keySet() ]) {
             linkMap.put(link.Github_Unique_Id__c, link);
         }
-        
+
         for (Github_Request__c gitRequest : gitRequests) {
             if (linkMap.get(gitRequest.Github_Unique_Id__c) != null && requestMap.get(gitRequest.Github_Unique_Id__c).Target__c == linkMap.get(gitRequest.Github_Unique_Id__c).Work__r.Name) {
                 // link already exists
@@ -158,6 +163,7 @@ global without sharing class GithubToAgileAccelerator {
                     Work__c = workNameWithId.get(gitRequest.Target__c)
                 ));
                 gitRequest.Status__c = 'Processed';
+                gitRequest.MD_Work_Link__c = '[' + gitRequest.Target__c + ']' + '(' + INSTANCE_URL + workNameWithId.get(gitRequest.Target__c) + ')';
             } else {
                 // work not found
                 gitRequest.Status__c = 'Rejected';
@@ -180,7 +186,7 @@ global without sharing class GithubToAgileAccelerator {
             gitRequest.Status__c = 'Processed';
         }
 
-        List<GitHub_Link__c> linksToDelete = 
+        List<GitHub_Link__c> linksToDelete =
             [ SELECT Id FROM GitHub_Link__c WHERE Github_Unique_Id__c in :githubUniqueIds ];
         if (!linksToDelete.isEmpty()) {
             delete linksToDelete;
@@ -198,5 +204,5 @@ global without sharing class GithubToAgileAccelerator {
         return null;
     }
 */
-    
+
 }
