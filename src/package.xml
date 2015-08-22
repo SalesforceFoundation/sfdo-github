@@ -11,7 +11,7 @@
     <members>GithubWebhookHandler</members>
     <members>GithubRequestHandler</members>
     <members>GithubToAgileAccelerator</members>
-    <members>GithubToAgileAccelerator_Test</members>    
+    <members>GithubToAgileAccelerator_Test</members>
     <name>ApexClass</name>
   </types>
   <types>
@@ -47,6 +47,7 @@
     <members>Github_Integration_Users__c.Github_Username__c</members>
     <members>Github_Repositories__c.Github_Repository_Id__c</members>
     <members>Github_Repositories__c.Product_Tag__c</members>
+    <members>Github_Repositories__c.Token__c</members>
     <members>Github_Request__c.Action__c</members>
     <members>Github_Request__c.Body__c</members>
     <members>Github_Request__c.MD_Work_Link__c</members>

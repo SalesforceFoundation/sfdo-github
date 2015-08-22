@@ -69,13 +69,14 @@ global without sharing class GithubRequestHandler implements Schedulable {
           if (s == 'attach'){ bodyText = 'Attached: '; }
           if (s == 'remove'){ bodyText = ' Detached: '; }
 
-          Map<String, Github_Request__c> RepoToReq = new Map<String, Github_Request__c>();
-
           for (Github_Request__c greq : ghr){
             //only write back the successfully processed results
             if(greq.Status__c == 'Processed'){
+
+              Github_Repositories__c gr = Github_Repositories__c.getValues(greq.Github_Repository__c);
+
               //create a new GH object
-              Github gh = new Github(String repo, String token);
+              Github gh = new Github(greq.Github_Repository__c, gr.Token__c);
               gh.Comment comment = new gh.Comment();
               comment.body = body_text + greq.MD_Work_Link__c;
               comment.id = greq.Github_Record_Id__c;

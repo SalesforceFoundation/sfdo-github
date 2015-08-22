@@ -16,6 +16,17 @@
         <unique>false</unique>
     </fields>
     <fields>
+      <fullName>Token__c</fullName>
+      <description>Auth token for this repository</description>
+      <externalId>false</externalId>
+      <label>Authorization Token</label>
+      <length>255</length>
+      <required>false</required>
+      <trackTrending>false</trackTrending>
+      <type>Text</type>
+      <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Product_Tag__c</fullName>
         <description>The Id of the corresponding Product Tag in Agile Accelerator.</description>
         <externalId>false</externalId>
