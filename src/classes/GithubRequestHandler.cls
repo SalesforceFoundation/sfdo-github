@@ -64,10 +64,10 @@ global without sharing class GithubRequestHandler implements Schedulable {
         for (String s : requestsByAction.keySet()) {
           //requests by action contains the updated lists thanks to the puts above
           List<Github_Request__c> ghr = requestsByAction.get(s);
-          String bodyText = '';
-          if (s == 'add'){ bodyText = 'Added: '; }
-          if (s == 'attach'){ bodyText = 'Attached: '; }
-          if (s == 'remove'){ bodyText = ' Detached: '; }
+          String body_text = '';
+          if (s == 'add'){ body_text = 'Added: '; }
+          if (s == 'attach'){ body_text = 'Attached: '; }
+          if (s == 'remove'){ body_text = ' Detached: '; }
 
           for (Github_Request__c greq : ghr){
             //only write back the successfully processed results
@@ -77,9 +77,9 @@ global without sharing class GithubRequestHandler implements Schedulable {
 
               //create a new GH object
               Github gh = new Github(greq.Github_Repository__c, gr.Token__c);
-              gh.Comment comment = new gh.Comment();
+              Github.Comment comment = new Github.Comment();
               comment.body = body_text + greq.MD_Work_Link__c;
-              comment.id = greq.Github_Record_Id__c;
+              comment.id = Integer.valueOf(greq.Github_Record_Id__c);
               gh.issues.createComment(comment);
             }
           }
