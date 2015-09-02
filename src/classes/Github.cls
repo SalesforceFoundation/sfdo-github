@@ -102,14 +102,21 @@ global with sharing class Github {
     }
 
     global class PullRequest {
+        global Integer id { get; set; }
+        global Integer num { get; set; }
         global String url { get; set; }
         global String html_url { get; set; }
         global String diff_url { get; set; }
         global String patch_url { get; set; }
+        global String state { get; set; }
+        global String title { get; set; }
+        global Github.User user { get; set; }
+        global String body { get; set; }
+        global Integer milestone { get; set; }
     }
 
     global class Issue {
-        global String id { get; set; }
+        global Integer id { get; set; }
         global String url { get; set; }
         global String html_url { get; set; }
 
@@ -185,7 +192,7 @@ global with sharing class Github {
         global Boolean fork { get; set; }
     }
 
-    global class IssueEvent {
+    global class IssuesEvent {
         global String action { get; set; }
         global Github.Issue issue { get; set; }
         global Github.Repository repository { get; set; }
@@ -195,6 +202,12 @@ global with sharing class Github {
         global String action { get; set; }
         global Github.Issue issue { get; set; }
         global Github.Comment comment { get; set; }
+        global Github.Repository repository { get; set; }
+    }
+    global class PullRequestEvent {
+        global String action { get; set; }
+        global Integer num { get; set; }
+        global Github.PullRequest pull_request { get; set; }
         global Github.Repository repository { get; set; }
     }
 
