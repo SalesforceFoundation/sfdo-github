@@ -16,7 +16,8 @@ global without sharing class GithubRequestHandler implements Schedulable {
         for (Github_Request__c githubRequest :
             [ SELECT Id, Body__c, Title__c, Comment__c, Action__c, Target__c,
                 Github_Record_Id__c, Github_Record_Type__c, Github_Record_URL__c,
-                Github_Repository__c, Github_Username__c, Status__c, Github_Unique_Id__c
+                Github_Repository__c, Github_Username__c, Status__c, Github_Unique_Id__c,
+                Github_Record_Number__c
                 FROM Github_Request__c
                 WHERE Status__c = 'New'
                 ORDER BY CreatedDate
@@ -57,10 +58,6 @@ global without sharing class GithubRequestHandler implements Schedulable {
             requestsByAction.put('remove', GithubToAgileAccelerator.detachFromAllRecords(requestsToDetach));
         }
 
-        // TODO: post results back to github
-
-        //Github gh = new Github(String repo, String token);
-
         for (String s : requestsByAction.keySet()) {
           //requests by action contains the updated lists thanks to the puts above
           List<Github_Request__c> ghr = requestsByAction.get(s);
@@ -75,17 +72,27 @@ global without sharing class GithubRequestHandler implements Schedulable {
 
               Github_Repositories__c gr = Github_Repositories__c.getValues(greq.Github_Repository__c);
 
-              //create a new GH object
-              Github gh = new Github(greq.Github_Repository__c, gr.Token__c);
               Github.Comment comment = new Github.Comment();
               comment.body = body_text + greq.MD_Work_Link__c;
-              comment.id = Integer.valueOf(greq.Github_Record_Id__c);
-              gh.issues.createComment(comment);
+              comment.id = Integer.valueOf(greq.Github_Record_Number__c);
+
+
+
+              //we should have a call-back mechanism to ensure non-sent post-backs are picked
+              //the next time throught the scheduler... you know, for v2.
+              Boolean callStackLimitExceeded = Limits.getFutureCalls() >= Limits.getLimitFutureCalls();
+              if (!callStackLimitExceeded) {
+                //call the @future version of the callout
+                GithubRequestHandler.createGithubComment(JSON.serialize(comment), gr.Token__c, greq.Github_Repository__c);
+              }
             }
           }
         }
-
-
-
     }//close processRequests
+
+  @future(callout=true)
+  static void createGithubComment(String serializedComment, String github_token, String repository) {
+      Github gh = new Github(repository, github_token);
+      gh.issues.createComment((Github.Comment)JSON.deserialize(serializedComment, Github.Comment.class));
+  }
 }
