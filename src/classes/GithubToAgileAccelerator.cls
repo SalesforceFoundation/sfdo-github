@@ -74,6 +74,10 @@ global without sharing class GithubToAgileAccelerator {
     public static List<Github_Request__c> addWorkRecords(List<Github_Request__c> gitRequests) {
         // github unique Id => work
         Map<String, agf__ADM_Work__c> workToCreate = new Map<String, agf__ADM_Work__c>();
+
+        // Id => work
+        Map<Id, agf__ADM_Work__c> newWorkWithName = new Map<Id, agf__ADM_Work__c>();
+
         // github unique Id => request
         Map<String, Github_Request__c> requests = new Map<String, Github_Request__c>();
         List<GitHub_Link__c> linksToCreate = new List<GitHub_Link__c>();
@@ -92,8 +96,8 @@ global without sharing class GithubToAgileAccelerator {
         // insert work
         if (!workToCreate.values().isEmpty()) {
             insert workToCreate.values();
-            // requery for name/etc. to provide links
-            workToCreate = new Map<String, agf__ADM_Work__c>([select id, Name from agf__ADM_Work__c where id IN :workToCreate.values()]);
+            // requery for created name/etc. to provide links
+            newWorkWithName = new Map<Id, agf__ADM_Work__c>([select id, Name from agf__ADM_Work__c where id IN :workToCreate.values()]);
         }
 
         for (String uniqueId : workToCreate.keySet()) {
@@ -105,8 +109,8 @@ global without sharing class GithubToAgileAccelerator {
                 Work__c = workToCreate.get(uniqueId).Id
             ));
             requests.get(uniqueId).Status__c = 'Processed';
-            requests.get(uniqueId).MD_Work_Link__c = '[' + workToCreate.get(uniqueId).Name + ']' + '(' + INSTANCE_URL + workToCreate.get(uniqueId).Id + ')';
-            requests.get(uniqueId).Target__c = workToCreate.get(uniqueId).Name;
+            requests.get(uniqueId).MD_Work_Link__c = '[' + newWorkWithName.get(workToCreate.get(uniqueId).Id).Name + ']' + '(' + INSTANCE_URL + workToCreate.get(uniqueId).Id + ')';
+            requests.get(uniqueId).Target__c = newWorkWithName.get(workToCreate.get(uniqueId).Id).Name;
         }
 
         // insert links

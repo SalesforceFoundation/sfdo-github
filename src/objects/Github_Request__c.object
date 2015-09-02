@@ -115,6 +115,16 @@
         <unique>false</unique>
     </fields>
     <fields>
+        <fullName>Github_Record_Number__c</fullName>
+        <externalId>false</externalId>
+        <label>Github Record Number</label>
+        <length>100</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>Github_Record_Type__c</fullName>
         <externalId>false</externalId>
         <label>Github Record Type</label>

@@ -2,10 +2,10 @@
 private class GithubToAgileAccelerator_Test {
 
     @TestSetup static void setupTestData() {
-        System.assertNotEquals(null, GithubIssueCommentHandler_Mock.repoSettings);
-        System.assertNotEquals(null, GithubIssueCommentHandler_Mock.authorizedUsers);
+        System.assertNotEquals(null, GithubWebhookHandler_Mock.repoSettings);
+        System.assertNotEquals(null, GithubWebhookHandler_Mock.authorizedUsers);
     }
-	
+
 	@isTest static void testAddWorkAuthorized() {
         User testUser = AppTestUtil.get().getCommunityUser();
         System.runAs(testUser) {
@@ -14,16 +14,16 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/issueCommentEvent';
+            request.requestURI = '/services/apexrest/github/WebhookEvent';
             request.httpMethod = 'POST';
-            request.requestBody = Blob.valueOf(GithubIssueCommentHandler_Mock.mockIssueCommentEvent('**lurch:add'));
+            request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:add'));
 
             RestContext.request = request;
             RestContext.response = response;
-                
-            GithubIssueCommentHandler.ResponseWrapper responseWrapper = GithubIssueCommentHandler.receiveEvent();
-            
-            Test.stopTest(); 
+
+            GithubWebhookHandler.ResponseWrapper responseWrapper = GithubWebhookHandler.receiveEvent();
+
+            Test.stopTest();
 
         }
 
@@ -44,12 +44,12 @@ private class GithubToAgileAccelerator_Test {
         System.assertEquals(AATestData.scrumTeam.Id, workRecords[0].agf__Scrum_Team__c);
         System.assertEquals('Spelling error in the README file', workRecords[0].agf__Subject__c);
         System.assertEquals('It looks like you accidently spelled \'commit\' with two \'t\'s.', workRecords[0].agf__Details__c);
-        
+
         List<GitHub_Link__c> links = [ SELECT Id, Github_Unique_Id__c, GitHub_Type__c, Work__c FROM GitHub_Link__c WHERE Work__c = :workRecords[0].Id];
         System.assertEquals(1, links.size());
         System.assertEquals('Issue', links[0].GitHub_Type__c);
         System.assertEquals(requests[0].Github_Unique_Id__c, links[0].Github_Unique_Id__c);
-        
+
 	}
 
     @isTest static void testAddWorkUnauthorized() {
@@ -61,16 +61,16 @@ private class GithubToAgileAccelerator_Test {
         RestRequest request = new RestRequest();
         RestResponse response = new RestResponse();
 
-        request.requestURI = '/services/apexrest/github/issueCommentEvent';
+        request.requestURI = '/services/apexrest/github/WebhookEvent';
         request.httpMethod = 'POST';
-        request.requestBody = Blob.valueOf(GithubIssueCommentHandler_Mock.mockIssueCommentEvent('**lurch:add Do some stuff'));
+        request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:add Do some stuff'));
 
         RestContext.request = request;
         RestContext.response = response;
-            
-        GithubIssueCommentHandler.ResponseWrapper responseWrapper = GithubIssueCommentHandler.receiveEvent();
-        
-        Test.stopTest(); 
+
+        GithubWebhookHandler.ResponseWrapper responseWrapper = GithubWebhookHandler.receiveEvent();
+
+        Test.stopTest();
 
         // user is not authorized; no work record should be created
         List<Github_Request__c> requests = [ SELECT Id, Github_Unique_Id__c, Status__c FROM Github_Request__c];
@@ -83,23 +83,23 @@ private class GithubToAgileAccelerator_Test {
         work = [SELECT Name FROM agf__ADM_Work__c WHERE Id = :work.Id];
 
         User testUser = AppTestUtil.get().getCommunityUser();
-        
+
         System.runAs(testUser) {
             Test.startTest();
 
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/issueCommentEvent';
+            request.requestURI = '/services/apexrest/github/WebhookEvent';
             request.httpMethod = 'POST';
-            request.requestBody = Blob.valueOf(GithubIssueCommentHandler_Mock.mockIssueCommentEvent('**lurch:attach ' + work.Name));
+            request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:attach ' + work.Name));
 
             RestContext.request = request;
             RestContext.response = response;
-                
-            GithubIssueCommentHandler.ResponseWrapper responseWrapper = GithubIssueCommentHandler.receiveEvent();
-            
-            Test.stopTest(); 
+
+            GithubWebhookHandler.ResponseWrapper responseWrapper = GithubWebhookHandler.receiveEvent();
+
+            Test.stopTest();
         }
 
         List<Github_Request__c> requests = [ SELECT Id, Github_Unique_Id__c, Status__c, Target__c, Action__c FROM Github_Request__c];
@@ -124,23 +124,23 @@ private class GithubToAgileAccelerator_Test {
         agf__ADM_Work__c work = AATestData.work;
 
         User testUser = AppTestUtil.get().getCommunityUser();
-        
+
         System.runAs(testUser) {
             Test.startTest();
 
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/issueCommentEvent';
+            request.requestURI = '/services/apexrest/github/WebhookEvent';
             request.httpMethod = 'POST';
-            request.requestBody = Blob.valueOf(GithubIssueCommentHandler_Mock.mockIssueCommentEvent('**lurch:attach W-000000'));
+            request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:attach W-000000'));
 
             RestContext.request = request;
             RestContext.response = response;
-                
-            GithubIssueCommentHandler.ResponseWrapper responseWrapper = GithubIssueCommentHandler.receiveEvent();
-            
-            Test.stopTest(); 
+
+            GithubWebhookHandler.ResponseWrapper responseWrapper = GithubWebhookHandler.receiveEvent();
+
+            Test.stopTest();
         }
 
         List<Github_Request__c> requests = [ SELECT Id, Github_Unique_Id__c, Status__c, Target__c, Action__c FROM Github_Request__c];
@@ -166,7 +166,7 @@ private class GithubToAgileAccelerator_Test {
 
         // create a link to that work before we call attach
         GitHub_Link__c link = new GitHub_Link__c(
-            GitHub_Unique_Id__c = 'public-repo_Issue_73464126', 
+            GitHub_Unique_Id__c = 'public-repo_Issue_73464126',
             GitHub_Type__c = 'Issue',
             Work__c = work.Id
         );
@@ -174,7 +174,7 @@ private class GithubToAgileAccelerator_Test {
         insert link;
 
         User testUser = AppTestUtil.get().getCommunityUser();
-        
+
         System.runAs(testUser) {
 
             Test.startTest();
@@ -182,16 +182,16 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/issueCommentEvent';
+            request.requestURI = '/services/apexrest/github/WebhookEvent';
             request.httpMethod = 'POST';
-            request.requestBody = Blob.valueOf(GithubIssueCommentHandler_Mock.mockIssueCommentEvent('**lurch:attach ' + work.Name));
+            request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:attach ' + work.Name));
 
             RestContext.request = request;
             RestContext.response = response;
-                
-            GithubIssueCommentHandler.ResponseWrapper responseWrapper = GithubIssueCommentHandler.receiveEvent();
-            
-            Test.stopTest(); 
+
+            GithubWebhookHandler.ResponseWrapper responseWrapper = GithubWebhookHandler.receiveEvent();
+
+            Test.stopTest();
         }
 
         List<Github_Request__c> requests = [ SELECT Id, Github_Unique_Id__c, Status__c, Target__c, Action__c FROM Github_Request__c];
@@ -217,7 +217,7 @@ private class GithubToAgileAccelerator_Test {
 
         // create a link to that work before we call attach
         GitHub_Link__c link = new GitHub_Link__c(
-            GitHub_Unique_Id__c = 'public-repo_Issue_73464126', 
+            GitHub_Unique_Id__c = 'public-repo_Issue_73464126',
             GitHub_Type__c = 'Issue',
             Work__c = work.Id
         );
@@ -228,23 +228,23 @@ private class GithubToAgileAccelerator_Test {
         System.assertEquals(1, links.size());
 
         User testUser = AppTestUtil.get().getCommunityUser();
-        
+
         System.runAs(testUser) {
             Test.startTest();
 
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/issueCommentEvent';
+            request.requestURI = '/services/apexrest/github/WebhookEvent';
             request.httpMethod = 'POST';
-            request.requestBody = Blob.valueOf(GithubIssueCommentHandler_Mock.mockIssueCommentEvent('**lurch:remove'));
+            request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:remove'));
 
             RestContext.request = request;
             RestContext.response = response;
-                
-            GithubIssueCommentHandler.ResponseWrapper responseWrapper = GithubIssueCommentHandler.receiveEvent();
-            
-            Test.stopTest(); 
+
+            GithubWebhookHandler.ResponseWrapper responseWrapper = GithubWebhookHandler.receiveEvent();
+
+            Test.stopTest();
         }
 
         List<Github_Request__c> requests = [ SELECT Id, Github_Unique_Id__c, Status__c, Target__c, Action__c FROM Github_Request__c];
