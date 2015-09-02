@@ -70,7 +70,7 @@ global without sharing class GithubWebhookHandler {
         //need to rename reserved to suppor the needed number field
 
         Github.renameReserved(event_body);
-        if (event_body.contains('lurch:')) {
+        if (event_body.containsIgnoreCase('lurch:')) {
             GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction(event_body);
             if (action.type == 'add' || action.type == 'remove' || action.type == 'attach') {
                 Github_Request__c gitRequest = new Github_Request__c(
