@@ -54,7 +54,7 @@ global without sharing class GithubToAgileAccelerator {
     }
 
     public static Action parseAction(String body) {
-        Pattern p = Pattern.compile('\\*\\*lurch:((?i)[a-z]+)( (?i)w-[0-9]+)?');
+        Pattern p = Pattern.compile('[\\*\\*]{2}[lL]urch:\s*((?i)[a-z]+)( (?i)w-[0-9]+)?');
         Matcher pm = p.matcher( body );
         pm.find();
         Action act = new Action();
