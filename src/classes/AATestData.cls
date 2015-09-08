@@ -1,12 +1,12 @@
-//@isTest
+@isTest
 public class AATestData {
-	
+
     public static agf__ADM_Scrum_Team__c scrumTeam {
         get {
             if (scrumTeam == null) {
-                List<agf__ADM_Scrum_Team__c> teams = 
-                    [ SELECT Id, Name, agf__Cloud__c 
-                        FROM agf__ADM_Scrum_Team__c 
+                List<agf__ADM_Scrum_Team__c> teams =
+                    [ SELECT Id, Name, agf__Cloud__c
+                        FROM agf__ADM_Scrum_Team__c
                         WHERE Name = 'Enterprise Systems' AND
                         agf__Cloud__c = 'Department Z' ];
                 if (teams.size() > 0) {
@@ -16,7 +16,7 @@ public class AATestData {
                         Name = 'Enterprise Systems',
                         agf__Cloud__c = 'Department Z'
                     );
-                    insert scrumTeam;    
+                    insert scrumTeam;
                 }
             }
             return scrumTeam;
@@ -27,9 +27,9 @@ public class AATestData {
     public static agf__ADM_Product_Tag__c productTag {
         get {
             if (productTag == null) {
-                List<agf__ADM_Product_Tag__c> tags = 
-                    [ SELECT Id, Name, agf__Team__c 
-                        FROM agf__ADM_Product_Tag__c 
+                List<agf__ADM_Product_Tag__c> tags =
+                    [ SELECT Id, Name, agf__Team__c
+                        FROM agf__ADM_Product_Tag__c
                         WHERE Name = 'Fake Tag' AND
                         agf__Team__c = :scrumTeam.Id ];
                 if (tags.size() > 0) {
@@ -39,18 +39,18 @@ public class AATestData {
                         Name = 'Fake Tag',
                         agf__Team__c = scrumTeam.Id
                     );
-                    insert productTag;    
+                    insert productTag;
                 }
             }
             return productTag;
         }
         set;
-    } 
+    }
 
     public static agf__ADM_Work__c work {
         get {
             if (work == null) {
-                List<agf__ADM_Work__c> workRecords = 
+                List<agf__ADM_Work__c> workRecords =
                     [ SELECT Id, Name, agf__Details__c, agf__Product_Tag__c, agf__Status__c, agf__Subject__c
                         FROM agf__ADM_Work__c
                         WHERE agf__Product_Tag__c = :productTag.Id
@@ -67,7 +67,7 @@ public class AATestData {
                     );
                     insert work;
                     // query so we have name
-                    workRecords = 
+                    workRecords =
                         [ SELECT Id, Name, agf__Details__c, agf__Product_Tag__c, agf__Status__c, agf__Subject__c
                             FROM agf__ADM_Work__c
                             WHERE agf__Product_Tag__c = :productTag.Id

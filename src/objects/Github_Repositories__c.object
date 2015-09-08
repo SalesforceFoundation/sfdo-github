@@ -18,6 +18,7 @@
       <fullName>Token__c</fullName>
       <description>Auth token for this repository</description>
       <externalId>false</externalId>
+      <inlineHelpText>Authorization token used for Lurch to post back to comment or issues when synced with Agile Accelerator.</inlineHelpText>
       <label>Authorization Token</label>
       <length>255</length>
       <required>false</required>

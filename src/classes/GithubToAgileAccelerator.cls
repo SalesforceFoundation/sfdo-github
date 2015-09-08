@@ -8,7 +8,7 @@ global without sharing class GithubToAgileAccelerator {
     5.  pull requests from a known user
     (?) 5.  milestones
     */
-    static String INSTANCE_URL = 'https://foundation--kbromer.cs30.my.salesforce.com/';
+    public static String INSTANCE_URL = String.valueOf(URL.getSalesforceBaseURL());//'https://foundation--kbromer.cs30.my.salesforce.com/';
 
     private static Set<String> authorizedUsers {
         get {
@@ -29,7 +29,7 @@ global without sharing class GithubToAgileAccelerator {
     }
 
     global static Boolean isRecognizedCommand(String command) {
-        Set<String> recognizedCommands = new Set<String>{ 'add', 'attach', 'remove' };
+        Set<String> recognizedCommands = new Set<String>{ 'add', 'attach', 'remove', 'comment' };
         return (recognizedCommands.contains(command));
     }
 
@@ -54,7 +54,7 @@ global without sharing class GithubToAgileAccelerator {
     }
 
     public static Action parseAction(String body) {
-        Pattern p = Pattern.compile('[\\*\\*]{2}[lL]urch:\s*((?i)[a-z]+)( (?i)w-[0-9]+)?');
+        Pattern p = Pattern.compile('[\\*\\*]{2}[lL]urch:\\s*((?i)[a-z]+)( (?i)w-[0-9]+)?');
         Matcher pm = p.matcher( body );
         pm.find();
         Action act = new Action();
@@ -68,7 +68,7 @@ global without sharing class GithubToAgileAccelerator {
     }
 
     public static String getUniqueId(Github_Request__c request) {
-        return request.Github_Repository__c + '_' + request.Github_Record_Type__c + '_' + request.Github_Record_Id__c;
+        return request.Github_Repository__c + '_' + request.Github_Record_Number__c;
     }
 
     public static List<Github_Request__c> addWorkRecords(List<Github_Request__c> gitRequests) {
@@ -109,7 +109,7 @@ global without sharing class GithubToAgileAccelerator {
                 Work__c = workToCreate.get(uniqueId).Id
             ));
             requests.get(uniqueId).Status__c = 'Processed';
-            requests.get(uniqueId).MD_Work_Link__c = '[' + newWorkWithName.get(workToCreate.get(uniqueId).Id).Name + ']' + '(' + INSTANCE_URL + workToCreate.get(uniqueId).Id + ')';
+            requests.get(uniqueId).Work_Link__c = '<a href="' + INSTANCE_URL + workToCreate.get(uniqueId).Id + '"' + ' target="_blank">' + newWorkWithName.get(workToCreate.get(uniqueId).Id).Name + '</a>';
             requests.get(uniqueId).Target__c = newWorkWithName.get(workToCreate.get(uniqueId).Id).Name;
         }
 
@@ -167,7 +167,7 @@ global without sharing class GithubToAgileAccelerator {
                     Work__c = workNameWithId.get(gitRequest.Target__c)
                 ));
                 gitRequest.Status__c = 'Processed';
-                gitRequest.MD_Work_Link__c = '[' + gitRequest.Target__c + ']' + '(' + INSTANCE_URL + workNameWithId.get(gitRequest.Target__c) + ')';
+                gitRequest.Work_Link__c = '<a href="' + INSTANCE_URL + workNameWithId.get(gitRequest.Target__c) + '"' + ' target="_blank">' + gitRequest.Target__c + '</a>';
             } else {
                 // work not found
                 gitRequest.Status__c = 'Rejected';
@@ -199,6 +199,25 @@ global without sharing class GithubToAgileAccelerator {
         update gitRequests;
 
         return gitRequests;
+    }
+
+    public static List<Github_Request__c> postComment(List<Github_Request__c> gitRequests){
+      List<FeedItem> fis = new List<FeedItem>();
+      for (Github_Request__c gr : gitRequests){
+        String posttext = '@' + gr.Github_Username__c + ': ' + gr.Body__c;
+        FeedItem fi = new FeedItem(
+          ParentId = gr.Target__c,
+          Type = 'TextPost',
+          Body = posttext
+        );
+        gr.Status__c = 'Processed';
+        fis.add(fi);
+      }
+      if (!fis.isEmpty())
+        insert fis;
+
+      update gitRequests;
+      return gitRequests;
     }
 
 /*

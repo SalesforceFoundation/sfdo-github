@@ -46,6 +46,12 @@ global without sharing class GithubRequestHandler implements Schedulable {
             requestsByAction.put('attach', GithubToAgileAccelerator.attachWorkToRecords(requestsToAttach));
         }
 
+        // process all the Comment
+        if (requestsByAction.get('comment') != null) {
+          List<Github_Request__c> requestsToComment = requestsByAction.get('comment');
+          requestsByAction.put('comment', GithubToAgileAccelerator.postComment(requestsToComment));
+        }
+
         // process all the detaches
         if (requestsByAction.get('remove') != null) {
             List<Github_Request__c> requestsToDetach = requestsByAction.get('remove');
@@ -58,41 +64,42 @@ global without sharing class GithubRequestHandler implements Schedulable {
             requestsByAction.put('remove', GithubToAgileAccelerator.detachFromAllRecords(requestsToDetach));
         }
 
+        //handle posting back to github for lurch actions requiring confirmation
         for (String s : requestsByAction.keySet()) {
-          //requests by action contains the updated lists thanks to the puts above
-          List<Github_Request__c> ghr = requestsByAction.get(s);
-          String body_text = '';
-          if (s == 'add'){ body_text = 'Added: '; }
-          if (s == 'attach'){ body_text = 'Attached: '; }
-          if (s == 'remove'){ body_text = ' Detached: '; }
 
-          for (Github_Request__c greq : ghr){
-            //only write back the successfully processed results
-            if(greq.Status__c == 'Processed'){
+          if (s == 'add' || s == 'attach' || s == 'remove'){
+            //requests by action contains the updated lists thanks to the puts above
+            List<Github_Request__c> ghr = requestsByAction.get(s);
+            String body_text = 'Tracking ';
+            if (s == 'remove'){ body_text = 'Detached '; }
 
-              Github_Repositories__c gr = Github_Repositories__c.getValues(greq.Github_Repository__c);
+            for (Github_Request__c greq : ghr){
+              //only write back the successfully processed results
+              if(greq.Status__c == 'Processed'){
 
-              Github.Comment comment = new Github.Comment();
-              comment.body = body_text + greq.MD_Work_Link__c;
-              comment.id = Integer.valueOf(greq.Github_Record_Number__c);
+                Github_Repositories__c gr = Github_Repositories__c.getValues(greq.Github_Repository__c);
 
+                Github.Comment comment = new Github.Comment();
+                comment.body = body_text + greq.Work_Link__c;
+                comment.id = Integer.valueOf(greq.Github_Record_Number__c);
 
-
-              //we should have a call-back mechanism to ensure non-sent post-backs are picked
-              //the next time throught the scheduler... you know, for v2.
-              Boolean callStackLimitExceeded = Limits.getFutureCalls() >= Limits.getLimitFutureCalls();
-              if (!callStackLimitExceeded) {
-                //call the @future version of the callout
-                GithubRequestHandler.createGithubComment(JSON.serialize(comment), gr.Token__c, greq.Github_Repository__c);
+                //we should have a call-back mechanism to ensure non-sent post-backs are picked
+                //the next time throught the scheduler... you know, for v2.
+                Boolean callStackLimitExceeded = Limits.getFutureCalls() >= Limits.getLimitFutureCalls();
+                if (!callStackLimitExceeded) {
+                  //call the @future version of the callout
+                  GithubRequestHandler.createGithubComment(JSON.serialize(comment), gr.Token__c, greq.Github_Repository__c);
+                }
               }
             }
           }
-        }
+        } 
     }//close processRequests
 
   @future(callout=true)
   static void createGithubComment(String serializedComment, String github_token, String repository) {
       Github gh = new Github(repository, github_token);
-      gh.issues.createComment((Github.Comment)JSON.deserialize(serializedComment, Github.Comment.class));
+      if (!Test.isRunningTest())
+        gh.issues.createComment((Github.Comment)JSON.deserialize(serializedComment, Github.Comment.class));
   }
 }

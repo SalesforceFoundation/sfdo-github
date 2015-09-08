@@ -14,7 +14,7 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/WebhookEvent';
+            request.requestURI = '/services/apexrest/github/webhook';
             request.httpMethod = 'POST';
             request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:add'));
 
@@ -61,7 +61,7 @@ private class GithubToAgileAccelerator_Test {
         RestRequest request = new RestRequest();
         RestResponse response = new RestResponse();
 
-        request.requestURI = '/services/apexrest/github/WebhookEvent';
+        request.requestURI = GithubToAgileAccelerator.INSTANCE_URL + '/services/apexrest/github/webhook';
         request.httpMethod = 'POST';
         request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:add Do some stuff'));
 
@@ -90,7 +90,7 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/WebhookEvent';
+            request.requestURI = '/services/apexrest/github/webhook';
             request.httpMethod = 'POST';
             request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:attach ' + work.Name));
 
@@ -131,7 +131,7 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/WebhookEvent';
+            request.requestURI = '/services/apexrest/github/webhook';
             request.httpMethod = 'POST';
             request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:attach W-000000'));
 
@@ -182,7 +182,7 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/WebhookEvent';
+            request.requestURI = '/services/apexrest/github/webhook';
             request.httpMethod = 'POST';
             request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:attach ' + work.Name));
 
@@ -235,7 +235,7 @@ private class GithubToAgileAccelerator_Test {
             RestRequest request = new RestRequest();
             RestResponse response = new RestResponse();
 
-            request.requestURI = '/services/apexrest/github/WebhookEvent';
+            request.requestURI = '/services/apexrest/github/webhook';
             request.httpMethod = 'POST';
             request.requestBody = Blob.valueOf(GithubWebhookHandler_Mock.mockIssueCommentEvent('**lurch:remove'));
 

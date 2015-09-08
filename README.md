@@ -9,7 +9,7 @@ Tool for supporting Github-Agile Accelerator integration
 ```
 https://<mysalesforcedomain>/services/apexrest/github/webhook
 ```
-*
+* Add your repo & username to the respective custom settings Github_Repositories__c and Github_Integration_Users__c
 
 
 

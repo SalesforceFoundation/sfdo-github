@@ -9,6 +9,7 @@
     <members>GithubWebhookHandler_Test</members>
     <members>GithubWebhookHandler</members>
     <members>GithubRequestHandler</members>
+    <members>GithubRequestHandler_TEST</members>
     <members>GithubToAgileAccelerator</members>
     <members>GithubToAgileAccelerator_Test</members>
     <name>ApexClass</name>
@@ -50,7 +51,7 @@
     <members>Github_Repositories__c.Token__c</members>
     <members>Github_Request__c.Action__c</members>
     <members>Github_Request__c.Body__c</members>
-    <members>Github_Request__c.MD_Work_Link__c</members>
+    <members>Github_Request__c.Work_Link__c</members>
     <name>CustomField</name>
   </types>
   <version>34.0</version>
