@@ -17,7 +17,20 @@ private class Github_Test {
         System.assertEquals(git.organization, 'otherOrg');
         System.assertEquals(git.repository, 'repo2');
     }
-    
+
+    @isTest
+    static void test_hook() {
+        Test.setMock(HttpCalloutMock.class, new GithubMock());
+
+        Github git = new Github('repo', 'fooToken');
+
+        List<Github.Hook> hooks = git.hooks.all();
+        Github.Hook h = git.hooks.get(1);
+        h = git.hooks.create(h);
+        h = git.hooks.put(h);
+        git.hooks.remove(h);
+    }
+
     @isTest
     static void test_milestones_get_all() {
         Test.setMock(HttpCalloutMock.class, new GithubMock());
@@ -25,6 +38,7 @@ private class Github_Test {
         Github git = new Github('repo', 'fooToken');
 
         List<Github.Milestone> milestones = git.milestones.get();
+        milestones = git.milestones.all();
     }
 
     @isTest
@@ -108,6 +122,7 @@ private class Github_Test {
         Github git = new Github('repo', 'fooToken');
 
         List<Github.Issue> issues = git.issues.get();
+        issues = git.issues.all();
     }
 
     @isTest
@@ -163,12 +178,21 @@ private class Github_Test {
         Test.setMock(HttpCalloutMock.class, new GithubMock());
 
         Github git = new Github('repo', 'fooToken');
-
         Github.Issue issue = git.issues.get(1);
         issue.title = 'Foo Update';
 
         Github.Issue updated = git.issues.put(issue);
         System.assertEquals('Foo Update', updated.title);
+    }
+
+    @isTest
+    static void test_issues_comment() {
+        Test.setMock(HttpCalloutMock.class, new GithubMock());
+
+        Github git = new Github('repo', 'fooToken');
+        Github.Comment c = new Github.Comment();
+        c.id = 123;
+        c = git.issues.createComment(c);
     }
 
     @isTest
@@ -179,5 +203,106 @@ private class Github_Test {
         Github.Issue issue = git.issues.get(1);
         git.issues.remove(issue);
     }
-    
+
+    @isTest
+    static void test_cover_subclass_properties() {
+
+      Github git = new Github('repo', 'fooToken');
+      Github.User u = new Github.User();
+      u.id = 123;
+      u.avatar_url = 'http://url.com';
+      u.gravatar_id = '123';
+      u.url = 'http://url.com';
+      u.html_url = 'http://url.com';
+      u.followers_url = 'http://url.com';
+      u.following_url = 'http://url.com';
+      u.gists_url = 'http://url.com';
+      u.starred_url = 'http://url.com';
+      u.subscriptions_url = 'http://url.com';
+      u.organizations_url = 'http://url.com';
+      u.repos_url = 'http://url.com';
+      u.events_url = 'http://url.com';
+      u.type = 'type';
+      u.site_admin = true;
+
+      Github.Milestone m = new Github.Milestone();
+      m.created_at = System.now();
+      m.updated_at = System.now();
+
+      Github.PullRequest p = new Github.PullRequest();
+      p.url = 'http://url.com';
+      p.diff_url = 'http://url.com';
+      p.patch_url = 'http://url.com';
+      p.state = 'Maryland';
+      p.milestone = 1;
+      p.id = 1;
+      p.num = 1;
+      p.html_url = 'http://url.com';
+      p.title = 'title';
+      p.user = u;
+      p.body = 'body';
+
+      Github.Issue i = new Github.Issue();
+      i.body_raw = 'body';
+      i.body_html = '<html>body</html>';
+      i.body_text = 'body';
+      i.comments = 1;
+      i.closed_at = System.now();
+      i.created_at = System.now();
+      i.updated_at = System.now();
+      i.labels_url = 'http://url.com';
+      i.comments_url = 'http://url.com';
+      i.events_url = 'http://url.com';
+      i.id = 1;
+      i.html_url = 'http://url.com';
+
+      Github.Comment c = new Github.Comment();
+      c.url = 'http://url.com';
+      c.id = 1;
+      c.html_url = 'http://url.com';
+      c.body = 'body';
+      c.user = u;
+      c.created_at = System.now();
+      c.updated_at = System.now();
+
+      Github.Repository r = new Github.Repository();
+      r.id = 1;
+      r.name = 'name';
+      r.full_name = 'repo';
+      r.html_url = 'http://url.com';
+      r.description = 'description text';
+      r.fork = true;
+
+      Github.PullRequestEvent pre = new Github.PullRequestEvent();
+      pre.num = 1;
+      pre.action = 'Action';
+      pre.pull_request = p;
+      pre.repository = r;
+
+      Github.IssuesEvent ie = new Github.IssuesEvent();
+      ie.action = 'action';
+      ie.issue = i;
+      ie.repository = r;
+
+      Github.IssueCommentEvent ice = new Github.IssueCommentEvent();
+      ice.action = 'action';
+      ice.issue = i;
+      ice.comment = c;
+      ice.repository = r;
+
+      Github.Hook h = new Github.Hook();
+      h.url = 'http://url.com';
+      h.name = 'Name';
+      h.events = new List<String>();
+      h.active = true;
+      h.config = new Map<String, String>();
+      h.id = 1;
+
+      i.assignee = u;
+      i.assigneeUsername = 'username';
+      i.milestone = m;
+      i.milestoneNumber = 1;
+      i.closed_by = u;
+      Integer num = Github.numFromUrl('http://github.com/1/2/3/4/5');
+    }
 }

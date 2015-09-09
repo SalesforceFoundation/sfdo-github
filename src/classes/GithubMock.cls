@@ -67,6 +67,27 @@ global class GithubMock implements HttpCalloutMock {
 
         }
 
+        /* Hooks */
+        if (client == 'hooks') {
+
+            if (method == 'GET') {
+                if (subject == null) {
+                    return getHooks(endpoint);
+                } else {
+                    return getHook();
+                }
+            }
+
+            if (method == 'POST') {
+                return createHook(req.getBody());
+            }
+
+            if (method == 'PATCH') {
+                return updateItem(req.getBody());
+            }
+
+        }
+
         /* Issues */
         if (client == 'issues') {
 
@@ -77,15 +98,15 @@ global class GithubMock implements HttpCalloutMock {
                     return getIssue();
                 }
             }
-            
+
             if (method == 'POST') {
                 return createIssue(req.getBody());
             }
-            
+
             if (method == 'PATCH') {
                 return updateItem(req.getBody());
             }
-            
+
         }
 
         if (req.getMethod() == 'DELETE') {
@@ -152,7 +173,7 @@ global class GithubMock implements HttpCalloutMock {
 
     global HttpResponse updateMilestone(String body) {
         HttpResponse res = baseResponse();
-        
+
         res.setBody(body);
         return res;
     }
@@ -230,6 +251,65 @@ global class GithubMock implements HttpCalloutMock {
         return res;
     }
 
+    global HttpResponse getHook() {
+        HttpResponse res = baseResponse();
+        res.setHeader('Link', '');
+
+        res.setBody(JSON.serialize(baseHook(1)));
+        return res;
+    }
+
+    global HttpResponse getHooks(String endpoint) {
+      HttpResponse res = baseResponse();
+      Integer page = 1;
+
+      if (query.keySet().contains('page')) {
+          page = Integer.valueOf(query.get('page'));
+      }
+
+      String link = '';
+      if (page == 1) {
+          link += '<https://api.github.com/repos/org/next/issues?page=2>; rel="next"';
+          link += ', <https://api.github.com/repos/org/last/issues?page=4>; rel="last"';
+      } else if (page == 2) {
+          link += '<https://api.github.com/repos/org/next/issues?page=3>; rel="next"';
+          link += ', <https://api.github.com/repos/org/next/issues?page=1>; rel="prev"';
+          link += ', <https://api.github.com/repos/org/last/issues?page=4>; rel="last"';
+          link += ', <https://api.github.com/repos/org/last/issues?page=1>; rel="first"';
+      } else if (page == 3) {
+          link += '<https://api.github.com/repos/org/next/issues?page=4>; rel="next"';
+          link += ', <https://api.github.com/repos/org/next/issues?page=2>; rel="prev"';
+          link += ', <https://api.github.com/repos/org/last/issues?page=4>; rel="last"';
+          link += ', <https://api.github.com/repos/org/last/issues?page=1>; rel="first"';
+      } else if (page == 4) {
+          link += '<https://api.github.com/repos/org/prev/issues?page=3>; rel="prev"';
+          link += ', <https://api.github.com/repos/org/first/issues?page=1>; rel="first"';
+      }
+      res.setHeader('Link', link);
+
+      List<Github.Hook> hooks = new List<Github.Hook>();
+
+      hooks.add(baseHook(page));
+
+      res.setBody(JSON.serialize(hooks));
+      return res;
+    }
+
+    global HttpResponse createHook(String body) {
+        HttpResponse res = baseResponse();
+
+        Github.Hook hook = (Github.Hook) JSON.deserialize(body, Github.Hook.class);
+
+        res.setBody(JSON.serialize(hook));
+        return res;
+    }
+
+    global HttpResponse updateHook(String body) {
+        HttpResponse res = baseResponse();
+        res.setBody(body);
+        return res;
+    }
+
     private HttpResponse baseResponse() {
         HttpResponse res = new HttpResponse();
         res.setStatus('OK');
@@ -254,6 +334,16 @@ global class GithubMock implements HttpCalloutMock {
         milestone.creator = creator;
 
         return milestone;
+    }
+
+    private Github.Hook baseHook(Integer num){
+        Github.Hook hook = new Github.Hook();
+        hook.url = 'https://api.github.com/repos/octocat/Hello-World/hooks/1';
+        hook.name = 'captain';
+        hook.events = new List<String>();
+        hook.active = true;
+        hook.config = new Map<String, String>();
+        return hook;
     }
 
     private Github.Issue baseIssue(Integer num) {

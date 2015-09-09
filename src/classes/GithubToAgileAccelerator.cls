@@ -219,13 +219,4 @@ global without sharing class GithubToAgileAccelerator {
       update gitRequests;
       return gitRequests;
     }
-
-/*
-
-    global static Id attachToEpicRecord(Github.Issue issue, String epicName){
-        // TODO: implement
-        return null;
-    }
-*/
-
 }
