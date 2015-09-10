@@ -85,15 +85,6 @@
         <visibleLines>5</visibleLines>
     </fields>
     <fields>
-        <fullName>Comment__c</fullName>
-        <externalId>false</externalId>
-        <label>Comment</label>
-        <length>32768</length>
-        <trackTrending>false</trackTrending>
-        <type>LongTextArea</type>
-        <visibleLines>3</visibleLines>
-    </fields>
-    <fields>
         <fullName>Github_Event__c</fullName>
         <externalId>false</externalId>
         <inlineHelpText>The event coming from Github (Issue, Issue Comment, etc.)</inlineHelpText>
@@ -182,7 +173,7 @@
         <trackTrending>false</trackTrending>
         <type>Text</type>
         <unique>false</unique>
-    </fields>  
+    </fields>
     <fields>
         <fullName>Github_Username__c</fullName>
         <externalId>false</externalId>

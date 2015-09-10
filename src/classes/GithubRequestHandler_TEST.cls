@@ -85,7 +85,7 @@ private class GithubRequestHandler_TEST {
       Github_Record_URL__c = 'https://github.com/SalesforceFoundation/sfdo-github/issues/16#issuecomment-137538186',
       Github_Repository__c = 'sfdo-github',
       Github_Record_Number__c = '16',
-      Action__c = 'remove',
+      Action__c = 'detach',
       Status__c = 'New'
     );
     insert gr_remove;
@@ -111,10 +111,9 @@ private class GithubRequestHandler_TEST {
   static void testAttachProcess() {
 
     agf__ADM_Work__c work = AATestData.work;
-    String wname = [SELECT Name from agf__ADM_Work__c where id = :work.id].Name;
 
     Github_Request__c gr_attach = new Github_Request__c(
-      Body__c = 'The body of my issue comment **lurch: attach ' + wname,
+      Body__c = 'The body of my issue comment **lurch: attach ' + work.id,
       Title__c = 'The title of my issue',
       Github_Username__c = 'theusername',
       Github_Record_Id__c = '137538186',
@@ -123,7 +122,7 @@ private class GithubRequestHandler_TEST {
       Github_Record_Number__c = '16',
       Action__c = 'attach',
       Status__c = 'New',
-      Target__c = wname
+      Target__c = work.id
     );
     insert gr_attach;
 
@@ -176,5 +175,50 @@ private class GithubRequestHandler_TEST {
     Test.startTest();
     String jobId = System.schedule('ScheduleApexClassTest', CRON_EXP, new GithubRequestHandler());
     Test.stopTest();
+  }
+
+  @isTest
+  static void testBadRequests(){
+    List<Github_Request__c> grlist = new List<Github_Request__c>();
+
+    Github_Request__c gr1 = new Github_Request__c(
+      Body__c = 'The body of my issue comment',
+      Title__c = 'The title of my issue',
+      Github_Username__c = 'theusername',
+      Github_Record_Id__c = '137538186',
+      Github_Record_URL__c = 'https://github.com/SalesforceFoundation/sfdo-github/issues/16#issuecomment-137538186',
+      Github_Repository__c = 'badrepo',
+      Github_Record_Number__c = '16',
+      Action__c = 'comment',
+      Status__c = 'New'
+    );
+    grlist.add(gr1);
+
+    Github_Request__c gr2 = new Github_Request__c(
+      Body__c = 'The body of my issue comment',
+      Title__c = 'The title of my issue',
+      Github_Username__c = 'badusername',
+      Github_Record_Id__c = '137538186',
+      Github_Record_URL__c = 'https://github.com/SalesforceFoundation/sfdo-github/issues/16#issuecomment-137538186',
+      Github_Repository__c = 'sfdo-github',
+      Github_Record_Number__c = '16',
+      Action__c = 'comment',
+      Status__c = 'New'
+    );
+    grlist.add(gr2);
+
+    Github_Request__c gr3 = new Github_Request__c(
+      Body__c = 'The body of my issue comment',
+      Title__c = 'The title of my issue',
+      Github_Username__c = 'theusername',
+      Github_Record_Id__c = '137538186',
+      Github_Record_URL__c = 'https://github.com/SalesforceFoundation/sfdo-github/issues/16#issuecomment-137538186',
+      Github_Repository__c = 'sfdo-github',
+      Github_Record_Number__c = '16',
+      Action__c = 'badcommand',
+      Status__c = 'New'
+    );
+    grlist.add(gr3);
+    insert grlist;
   }
 }

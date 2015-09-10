@@ -33,6 +33,7 @@ global without sharing class GithubRequestHandler implements Schedulable {
         }
 
         // NOTE: if the same record shows up in the same batch multiple times, only the last action should be honored
+        // Processing order is important. adds and attaches must happen before comments to validate the comments
 
         // process all the adds
         if (requestsByAction.get('add') != null) {
@@ -46,32 +47,62 @@ global without sharing class GithubRequestHandler implements Schedulable {
             requestsByAction.put('attach', GithubToAgileAccelerator.attachWorkToRecords(requestsToAttach));
         }
 
-        // process all the Comment
+        // process all the comments
+        //removing the unlinked ones first
+        //based on the existing adds and detaches
         if (requestsByAction.get('comment') != null) {
           List<Github_Request__c> requestsToComment = requestsByAction.get('comment');
-          requestsByAction.put('comment', GithubToAgileAccelerator.postComment(requestsToComment));
+          List<String> requestIds = new List<String>();
+
+          for (Github_Request__c gr : requestsToComment ){
+            requestIds.add(gr.Github_Unique_Id__c);
+          }
+
+          List<Github_Link__c> igl = new List<Github_Link__c>();
+          igl = [SELECT Id, Work__c, Github_Unique_Id__c FROM Github_Link__c where Github_Unique_Id__c IN :requestIds];
+          Map<String, Github_Link__c> linksByUniqueId = new Map<String, Github_Link__c>();
+
+          for (Github_Link__c g : igl){
+            linksByUniqueId.put(g.Github_Unique_Id__c, g);
+          }
+
+          List<Github_Request__c> requestsToPost = new List<Github_Request__c>();
+          List<Github_Request__c> requestsToDelete = new List<Github_Request__c>();
+          for (Github_Request__c gr : requestsToComment ){
+            if (linksByUniqueId.containsKey(gr.Github_Unique_Id__c)){
+              gr.Target__c = linksByUniqueId.get(gr.Github_Unique_Id__c).Work__c;
+              requestsToPost.add(gr);
+            }
+            else
+              requestsToDelete.add(gr);
+          }
+
+          //delete any comments from non-tracked requests
+          delete requestsToDelete;
+
+          requestsByAction.put('comment', GithubToAgileAccelerator.handleComments(requestsToPost));
         }
 
         // process all the detaches
-        if (requestsByAction.get('remove') != null) {
-            List<Github_Request__c> requestsToDetach = requestsByAction.get('remove');
+        if (requestsByAction.get('detach') != null) {
+            List<Github_Request__c> requestsToDetach = requestsByAction.get('detach');
             // only process detaches if 'detach' was the last command for this github record
             for (Integer i = 0; i < requestsToDetach.size(); i++) {
-                if (lastAction.get(requestsToDetach[i].Github_Unique_Id__c) != 'remove') {
+                if (lastAction.get(requestsToDetach[i].Github_Unique_Id__c) != 'detach') {
                     requestsToDetach.remove(i);
                 }
             }
-            requestsByAction.put('remove', GithubToAgileAccelerator.detachFromAllRecords(requestsToDetach));
+            requestsByAction.put('detach', GithubToAgileAccelerator.detachFromAllRecords(requestsToDetach));
         }
 
         //handle posting back to github for lurch actions requiring confirmation
         for (String s : requestsByAction.keySet()) {
 
-          if (s == 'add' || s == 'attach' || s == 'remove'){
+          if (s == 'add' || s == 'attach' || s == 'detach'){
             //requests by action contains the updated lists thanks to the puts above
             List<Github_Request__c> ghr = requestsByAction.get(s);
             String body_text = 'Tracking ';
-            if (s == 'remove'){ body_text = 'Detached '; }
+            if (s == 'detach'){ body_text = 'Detached '; }
 
             for (Github_Request__c greq : ghr){
               //only write back the successfully processed results
@@ -93,7 +124,7 @@ global without sharing class GithubRequestHandler implements Schedulable {
               }
             }
           }
-        } 
+        }
     }//close processRequests
 
   @future(callout=true)

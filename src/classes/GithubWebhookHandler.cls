@@ -24,6 +24,7 @@ global without sharing class GithubWebhookHandler {
         /* or C: The user is authenticated and its an action not requiring a Lurch command (milestone created, labeling, whatever) */
         String github_event_type = req.headers.get('X-GitHub-Event');
         String event_body = '';
+        String issue_body = '';
         String event_title = '';
         String event_user = '';
         Integer event_id;
@@ -38,6 +39,7 @@ global without sharing class GithubWebhookHandler {
         if (github_event_type == 'issue_comment'){
           Github.IssueCommentEvent evt = (Github.IssueCommentEvent) JSON.deserialize(body, Github.IssueCommentEvent.class);
           event_body = evt.comment.body;
+          issue_body = evt.issue.body;
           event_title = evt.issue.title; //this is correct
           event_user = evt.comment.user.login;
           event_id = evt.comment.id;
@@ -49,6 +51,7 @@ global without sharing class GithubWebhookHandler {
         else if (github_event_type == 'issues'){
           Github.IssuesEvent evt = (Github.IssuesEvent) JSON.deserialize(body, Github.IssuesEvent.class);
           event_body = evt.issue.body;
+          issue_body = evt.issue.body;
           event_title = evt.issue.title;
           event_user = evt.issue.user.login;
           event_id = evt.issue.id;
@@ -60,6 +63,7 @@ global without sharing class GithubWebhookHandler {
         else if (github_event_type == 'pull_request'){
           Github.PullRequestEvent evt = (Github.PullRequestEvent) JSON.deserialize(body, Github.PullRequestEvent.class);
           event_body = evt.pull_request.body;
+          issue_body = evt.pull_request.body;
           event_title = evt.pull_request.title;
           event_user = evt.pull_request.user.login;
           event_id = evt.pull_request.id;
@@ -76,16 +80,18 @@ global without sharing class GithubWebhookHandler {
         link_list = [select id, Work__c from Github_Link__c where Github_Unique_Id__c = :uid];
 
         //handle lurch commands
-        if (event_body.containsIgnoreCase('lurch:')) {
+        if (event_body.containsIgnoreCase('**lurch:')) {
             GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction(event_body);
-            if (action.type == 'add' || action.type == 'remove' || action.type == 'attach') {
+            String target = '';
+            if (action.type == 'attach') target = [SELECT id from agf__ADM_Work__c where Name = :action.target].id;
+
+            if (action.type == 'add' || action.type == 'detach' || action.type == 'attach') {
                 Github_Request__c gitRequest = new Github_Request__c(
                     Action__c = action.type,
                     Title__c = event_title,
-                    Body__c = event_body,
-                    Comment__c = event_body,
+                    Body__c = action.type == 'add' ? issue_body : event_body,
                     Status__c = 'New',
-                    Target__c = action.target,
+                    Target__c = action.type == 'attach' ? target : null ,
                     Github_Event__c = github_event_type + ' ' + event_action,
                     Github_Record_Id__c = String.valueOf(event_id),
                     Github_Record_Type__c = github_event_type,
@@ -104,45 +110,29 @@ global without sharing class GithubWebhookHandler {
 
         //handle comments on a tracked record
         else if (github_event_type == 'issue_comment' && !event_body.containsIgnoreCase('Tracking <a href')){
-          //we have a valid linked issue for this Comment
-          //so enter a new request to be picked up by the scheduler
-          if (!link_list.isEmpty()){
-            //create a list of work items that need the comment added
-            List<Github_Request__c> gr = new List<Github_Request__c>();
-            for (Github_Link__c gl : link_list){
-              Github_Request__c gitRequest = new Github_Request__c(
-                  Action__c = 'comment',
-                  Title__c = event_title,
-                  Body__c = event_body,
-                  Comment__c = event_body,
-                  Status__c = 'New',
-                  Target__c = gl.Work__c,
-                  Github_Event__c = github_event_type + ' ' + event_action,
-                  Github_Record_Id__c = String.valueOf(event_id),
-                  Github_Record_Type__c = github_event_type,
-                  Github_Record_URL__c = event_url,
-                  Github_Repository__c = event_repo_name,
-                  Github_Username__c = event_user,
-                  Github_Record_Number__c = String.valueOf(event_number),
-                  JSON__c = body
-              );
-              gr.add(gitRequest);
-            }
-            if (!gr.isEmpty())
-              insert gr;
-            resp = new ResponseWrapper('Request received.');
-          } else {
-            resp = new ResponseWrapper('Unknown issue.');
-          }
-        }
 
+          Github_Request__c gitRequest = new Github_Request__c(
+              Action__c = 'comment',
+              Title__c = event_title,
+              Body__c = event_body,
+              Comment__c = event_body,
+              Status__c = 'New',
+              Github_Event__c = github_event_type + ' ' + event_action,
+              Github_Record_Id__c = String.valueOf(event_id),
+              Github_Record_Type__c = github_event_type,
+              Github_Record_URL__c = event_url,
+              Github_Repository__c = event_repo_name,
+              Github_Username__c = event_user,
+              Github_Record_Number__c = String.valueOf(event_number),
+              JSON__c = body
+          );
+
+          insert gitRequest;
+          resp = new ResponseWrapper('Request received.');
+        }
         //handle opening/closing of tracked github issue
         else if (github_event_type == 'issues'){
-
-
         }
-
-
         else {
             resp = new ResponseWrapper('No command received.');
         }

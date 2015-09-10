@@ -44,7 +44,7 @@ private class GithubToAgileAccelerator_Test {
       Github_Record_Number__c = '16',
       Action__c = 'attach',
       Status__c = 'New',
-      Target__c = work.Name
+      Target__c = work.id
     );
     insert gr_attach;
 
@@ -58,7 +58,7 @@ private class GithubToAgileAccelerator_Test {
       Github_Record_Number__c = '16',
       Action__c = 'detach',
       Status__c = 'New',
-      Target__c = work.Name
+      Target__c = work.id
     );
     insert gr_detach;
 
@@ -111,7 +111,6 @@ private class GithubToAgileAccelerator_Test {
     glist = GithubToAgileAccelerator.attachWorkToRecords(glist);
     Test.stopTest();
     System.assertEquals('Processed', glist[0].Status__c);
-    System.assertEquals('Processed', glist[0].Status__c);
   }
 
   @isTest
@@ -132,9 +131,9 @@ private class GithubToAgileAccelerator_Test {
 
   @isTest
   static void testPostComment(){
-    List<Github_Request__c> glist = [SELECT id, Status__c, Github_Unique_Id__c, Title__c, Target__c, Github_Username__c, Github_Repository__c, Body__c, Github_Record_Type__c, Github_Record_URL__c from Github_Request__c where Action__c = 'comment' limit 1];
+    List<Github_Request__c> glist = [SELECT id, Status__c, Github_Unique_Id__c, Action__c, Title__c, Target__c, Github_Username__c, Github_Repository__c, Body__c, Github_Record_Type__c, Github_Record_URL__c from Github_Request__c where Action__c = 'comment' limit 1];
     Test.startTest();
-    glist = GithubToAgileAccelerator.postComment(glist);
+    glist = GithubToAgileAccelerator.handleComments(glist);
     Test.stopTest();
     System.assertEquals('Processed', glist[0].Status__c);
     System.assertEquals(1, [SELECT count() FROM FeedItem WHERE ParentId = :glist[0].Target__c]);
