@@ -96,13 +96,13 @@ global without sharing class GithubRequestHandler implements Schedulable {
         }
 
         //handle posting back to github for lurch actions requiring confirmation
-        for (String s : requestsByAction.keySet()) {
+        for (String requestAction : requestsByAction.keySet()) {
 
-          if (s == 'add' || s == 'attach' || s == 'detach'){
+          if (requestAction == 'add' || requestAction == 'attach' || requestAction == 'detach'){
             //requests by action contains the updated lists thanks to the puts above
-            List<Github_Request__c> ghr = requestsByAction.get(s);
+            List<Github_Request__c> ghr = requestsByAction.get(requestAction);
             String body_text = 'Tracking ';
-            if (s == 'detach'){ body_text = 'Detached '; }
+            if (requestAction == 'detach'){ body_text = 'Detached '; }
 
             for (Github_Request__c greq : ghr){
               //only write back the successfully processed results
