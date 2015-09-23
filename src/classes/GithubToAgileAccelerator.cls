@@ -46,13 +46,11 @@ global without sharing class GithubToAgileAccelerator {
 
   /*******************************************************************************************************
   * @description Static string for returning base URL
-  * @return String
   ********************************************************************************************************/
   public static String INSTANCE_URL = URL.getSalesforceBaseURL().toExternalForm();//'https://foundation--kbromer.cs30.my.salesforce.com/';
 
   /*******************************************************************************************************
   * @description Returns the set of authorized Github usernames for this org
-  * @return Set<String>
   ********************************************************************************************************/
   private static Set<String> authorizedUsers {
       get {
