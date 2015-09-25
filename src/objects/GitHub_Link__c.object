@@ -78,7 +78,7 @@
     <fields>
         <fullName>GitHub_Unique_Id__c</fullName>
         <externalId>false</externalId>
-        <inlineHelpText>The composite Id of the record defined in GithubToAgileAccelerator.getUniqueId() - originally &lt;repository_name&gt;_&lt;github_record_type&gt;_&lt;github_record_id&gt;</inlineHelpText>
+        <inlineHelpText>The composite Id of the record defined in GithubToAgileAccelerator.getUniqueId()</inlineHelpText>
         <label>GitHub Unique Id</label>
         <length>100</length>
         <required>false</required>

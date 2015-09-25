@@ -142,7 +142,17 @@ global without sharing class GithubToAgileAccelerator {
   * @return String
   ********************************************************************************************************/
   public static String getUniqueId(Github_Request__c request) {
-      return request.Github_Repository__c + '_' + request.Github_Record_Number__c;
+      return getUniqueId(request.Github_Repository__c, request.Github_Record_Number__c);
+  }
+
+  /*******************************************************************************************************
+  * @description Generate a new unique Id based on the repository and the record number - supports Webhook queries
+  * @param repositoryName name of the Github repo for this item
+  * @param githubRecordNumber the issue or pull request number as an integer
+  * @return String
+  ********************************************************************************************************/
+  public static String getUniqueId(String repositoryName, String githubRecordNumber) {
+      return repositoryName+ '_' + githubRecordNumber;
   }
 
   /*******************************************************************************************************

@@ -113,42 +113,47 @@ global without sharing class GithubWebhookHandler {
 
       ResponseWrapper resp;
 
-      String uid = event_repo_name + '_' + String.valueOf(event_number);
-      List<Github_Link__c> link_list = new List<Github_Link__c>();
-      link_list = [select id, Work__c from Github_Link__c where Github_Unique_Id__c = :uid];
-
       //handle lurch commands
       if (event_body.containsIgnoreCase('**lurch:')) {
-          GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction(event_body);
-          String target = '';
-          if (action.type == 'attach') target = [SELECT id from agf__ADM_Work__c where Name = :action.target].id;
+        GithubToAgileAccelerator.Action action = GithubToAgileAccelerator.parseAction(event_body);
+        String target = '';
 
-          if (action.type == 'add' || action.type == 'detach' || action.type == 'attach') {
-              Github_Request__c gitRequest = new Github_Request__c(
-                  Action__c = action.type,
-                  Title__c = event_title,
-                  Body__c = action.type == 'add' ? issue_body : event_body,
-                  Status__c = 'New',
-                  Target__c = action.type == 'attach' ? target : null ,
-                  Github_Event__c = github_event_type + ' ' + event_action,
-                  Github_Record_Id__c = String.valueOf(event_id),
-                  Github_Record_Type__c = github_event_type,
-                  Github_Record_URL__c = event_url,
-                  Github_Repository__c = event_repo_name,
-                  Github_Username__c = event_user,
-                  Github_Record_Number__c = String.valueOf(event_number),
-                  JSON__c = body
-              );
-              insert gitRequest;
-              resp = new ResponseWrapper('Request received.');
-          } else {
-              resp = new ResponseWrapper('Unable to process request.');
+        //will throw a null pointer - catch and toss an exception and respond with it
+        if (action.type == 'attach'){
+          try{
+            target = [SELECT id from agf__ADM_Work__c where Name = :action.target].id;
+          } catch (Exception e){
+            return new ResponseWrapper('Work item not found or query error');
           }
+        }
+
+        if (action.type == 'add' || action.type == 'detach' || action.type == 'attach') {
+            Github_Request__c gitRequest = new Github_Request__c(
+                Action__c = action.type,
+                Title__c = event_title,
+                Body__c = action.type == 'add' ? issue_body : event_body,
+                Status__c = 'New',
+                Target__c = action.type == 'attach' ? target : null ,
+                Github_Event__c = github_event_type + ' ' + event_action,
+                Github_Record_Id__c = String.valueOf(event_id),
+                Github_Record_Type__c = github_event_type,
+                Github_Record_URL__c = event_url,
+                Github_Repository__c = event_repo_name,
+                Github_Username__c = event_user,
+                Github_Record_Number__c = String.valueOf(event_number),
+                JSON__c = body
+            );
+          insert gitRequest;
+          resp = new ResponseWrapper('Request received.');
+        } else {
+          resp = new ResponseWrapper('Unable to process request.');
+        }
       }
 
       //handle comments on a tracked record
-      else if (github_event_type == 'issue_comment' && !event_body.containsIgnoreCase('Tracking <a href')){
-
+      //throw out anything that doesn't have either a Github link or a Github Request in the queue
+      else if (github_event_type == 'issue_comment' && !event_body.containsIgnoreCase('Tracking <a href') &&
+              (GithubWebhookHandler.hasGithubLink(event_number, event_repo_name) || GithubWebhookHandler.hasExistingRequestInQueue(event_number))){
         Github_Request__c gitRequest = new Github_Request__c(
             Action__c = 'comment',
             Title__c = event_title,
@@ -164,7 +169,6 @@ global without sharing class GithubWebhookHandler {
             Github_Record_Number__c = String.valueOf(event_number),
             JSON__c = body
         );
-
         insert gitRequest;
         resp = new ResponseWrapper('Request received.');
       }
@@ -175,5 +179,28 @@ global without sharing class GithubWebhookHandler {
           resp = new ResponseWrapper('No command received.');
       }
       return resp;
+  }
+
+  /*******************************************************************************************************
+  * @description Returns true if the IssueCommentEvent has a valid issue already in the queue - NOTE: this is dependent on the insert order (issue->issue_comment) to work correctly
+  * @return Boolean
+  ********************************************************************************************************/
+  private static Boolean hasExistingRequestInQueue(Integer event_num){
+    List<Github_Request__c> grList = new List<Github_Request__c>();
+    //query for any github requests that are new adds for the same issue as this issue comment
+    grList = [select Name, Id from Github_Request__c where Status__c = 'New' and Action__c = 'add' and Github_Record_Number__c = :String.valueOf(event_num)];
+    return !grList.isEmpty();
+  }
+
+  /*******************************************************************************************************
+  * @description Returns true if the IssueCommentEvent has a valid Github link already in the system
+  * @return Boolean
+  ********************************************************************************************************/
+  private static Boolean hasGithubLink(Integer event_num, String event_repo_name){
+    List<Github_Link__c> grList = new List<Github_Link__c>();
+    String issueUniqueId = GithubToAgileAccelerator.getUniqueId(event_repo_name, String.valueOf(event_num));
+    //query for any github requests that are new adds for the same issue as this issue comment
+    grList = [select Name, Id from Github_Link__c where GitHub_Unique_Id__c = :issueUniqueId];
+    return !grList.isEmpty();
   }
 }
