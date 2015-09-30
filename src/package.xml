@@ -30,8 +30,7 @@
     <members>GitHub_Link__c.Github_URL__c</members>
     <members>Github_Request__c.Title__c</members>
     <members>Github_Request__c.Target__c</members>
-    <members>Github_Request__c.Status__c</members>
-    <members>Github_Request__c.Queue_Datestamp__c</members>
+    <members>Github_Request__c.Status__c</members>    
     <members>Github_Request__c.JSON__c</members>
     <members>Github_Request__c.Github_Username__c</members>
     <members>Github_Request__c.Github_Record_URL__c</members>
