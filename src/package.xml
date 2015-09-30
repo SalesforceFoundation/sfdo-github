@@ -42,13 +42,13 @@
     <members>Github_Request__c.Github_Record_Id__c</members>
     <members>Github_Request__c.Github_Event__c</members>
     <members>Github_Request__c.Github_Record_Number__c</members>
+    <members>Github_Request__c.Action__c</members>
+    <members>Github_Request__c.Body__c</members>
+    <members>Github_Request__c.Work_Link__c</members>
     <members>Github_Integration_Users__c.Github_Username__c</members>
     <members>Github_Repositories__c.Github_Repository_Id__c</members>
     <members>Github_Repositories__c.Product_Tag__c</members>
     <members>Github_Repositories__c.Token__c</members>
-    <members>Github_Request__c.Action__c</members>
-    <members>Github_Request__c.Body__c</members>
-    <members>Github_Request__c.Work_Link__c</members>
     <name>CustomField</name>
   </types>
   <version>34.0</version>
