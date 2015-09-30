@@ -96,15 +96,6 @@
         <type>Url</type>
     </fields>
     <fields>
-        <fullName>JSON__c</fullName>
-        <externalId>false</externalId>
-        <label>JSON</label>
-        <length>32768</length>
-        <trackTrending>false</trackTrending>
-        <type>LongTextArea</type>
-        <visibleLines>15</visibleLines>
-    </fields>
-    <fields>
         <fullName>Work__c</fullName>
         <deleteConstraint>SetNull</deleteConstraint>
         <externalId>false</externalId>
