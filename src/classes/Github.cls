@@ -1,11 +1,37 @@
+/*
+    Copyright (c) 2015, Salesforce.com Foundation
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the Salesforce.com Foundation nor the names of
+      its contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+*/
 /**
-* @author Ryan Foster, Salesforce Foundation
+* @author Ryan Foster, Kevin Bromer
 * @date 2015
-*
-* @group Github
-*
-* @description Github API Client. Currently supports milestones, issues and
-* hooks (limited) using basic oath.
+* @group Github-AA
+* @description Github API Client. Currently supports milestones, issues and hooks (limited) using basic oath.
 */
 global with sharing class Github {
 
@@ -102,13 +128,21 @@ global with sharing class Github {
     }
 
     global class PullRequest {
+        global Integer id { get; set; }
+        global Integer num { get; set; }
         global String url { get; set; }
         global String html_url { get; set; }
         global String diff_url { get; set; }
         global String patch_url { get; set; }
+        global String state { get; set; }
+        global String title { get; set; }
+        global Github.User user { get; set; }
+        global String body { get; set; }
+        global Integer milestone { get; set; }
     }
 
     global class Issue {
+        global Integer id { get; set; }
         global String url { get; set; }
         global String html_url { get; set; }
 
@@ -165,6 +199,16 @@ global with sharing class Github {
         }
     }
 
+    global class Comment {
+        global Integer id { get; set; }
+        global String url { get; set; }
+        global String html_url { get; set; }
+        global String body { get; set; }
+        global Github.User user { get; set; }
+        global Datetime created_at { get; set; }
+        global Datetime updated_at { get; set; }
+    }
+
     global class Repository {
         global Integer id { get; set; }
         global String name { get; set; }
@@ -174,6 +218,25 @@ global with sharing class Github {
         global Boolean fork { get; set; }
     }
 
+    global class IssuesEvent {
+        global String action { get; set; }
+        global Github.Issue issue { get; set; }
+        global Github.Repository repository { get; set; }
+    }
+
+    global class IssueCommentEvent {
+        global String action { get; set; }
+        global Github.Issue issue { get; set; }
+        global Github.Comment comment { get; set; }
+        global Github.Repository repository { get; set; }
+    }
+    global class PullRequestEvent {
+        global String action { get; set; }
+        global Integer num { get; set; }
+        global Github.PullRequest pull_request { get; set; }
+        global Github.Repository repository { get; set; }
+    }
+
     global class Hook {
         global String url { get; set; }
         global String name { get; set; }
@@ -181,12 +244,6 @@ global with sharing class Github {
         global Boolean active { get; set; }
         global Map<String, String> config { get; set; }
         global Integer id { get; set; }
-    }
-
-    global class Webhook {
-        global String action { get; set; }
-        global Github.Issue issue { get; set; }
-        global Github.Repository repository { get; set; }
     }
 
     /**
@@ -602,6 +659,12 @@ global with sharing class Github {
 
         global void remove(Github.Issue issue) {
             this.makeRequest(String.valueOf(issue.num), 'DELETE', null);
+        }
+
+        global Github.Comment createComment(Github.Comment comment) {
+          System.assert(comment.id != null, 'Comment.id is required to post a Comment.');
+          this.makeRequest(String.valueOf(comment.id) + '/comments', 'POST', JSON.serialize(comment));
+          return (Github.Comment) JSON.deserialize(this.lastREsponse.body, Github.Comment.class);
         }
 
         global List<Github.Issue> next() {
