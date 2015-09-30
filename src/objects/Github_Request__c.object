@@ -155,7 +155,7 @@
     <fields>
         <fullName>Work_Link__c</fullName>
         <externalId>false</externalId>
-        <inlineHelpText>HTML Work Link.</inlineHelpText>
+        <inlineHelpText>HTML Work Link</inlineHelpText>
         <label>HTML Link to Work</label>
         <length>255</length>
         <required>false</required>
@@ -165,7 +165,7 @@
     </fields>
     <fields>
         <fullName>Github_Unique_Id__c</fullName>
-        <description>Github Record Type + &apos; &apos; + Github Record Id =&gt; Issue 9</description>
+        <description></description>
         <externalId>false</externalId>
         <label>Github_Unique_Id</label>
         <length>100</length>
@@ -192,15 +192,6 @@
         <trackTrending>false</trackTrending>
         <type>LongTextArea</type>
         <visibleLines>10</visibleLines>
-    </fields>
-    <fields>
-        <fullName>Queue_Datestamp__c</fullName>
-        <description>A copy of CreatedDate that we can manipulate for testing.</description>
-        <externalId>false</externalId>
-        <label>Queue Datestamp</label>
-        <required>false</required>
-        <trackTrending>false</trackTrending>
-        <type>DateTime</type>
     </fields>
     <fields>
         <fullName>Status__c</fullName>
